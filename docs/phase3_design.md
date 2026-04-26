@@ -45,7 +45,7 @@ Changing it later requires a migration note and updated tests.
 | ID | Limitation | Deferred To |
 |----|------------|-------------|
 | P3-L1 | Only constant defocus is implemented; spatial `z(x, y)` maps are not yet propagated locally. | Phase 3 topography map |
-| P3-L2 | Nominal DOF metric exists, but no broad `k2` fitting study yet. | Phase 3 analysis sweep |
+| P3-L2 | DOF is measurable, but broad `k2` fitting is deferred. | Phase 3 analysis sweep |
 | P3-L3 | No micro focus-drilling depth slices. | Phase 3 part 3 |
 | P3-L4 | Scalar coherent optics remains inherited from Phase 1. | Phase 2/4 |
 

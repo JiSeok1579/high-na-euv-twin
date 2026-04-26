@@ -19,6 +19,9 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-26 | meta | housekeeping | MT-011/013/014 v2.1 sync + 문서 drift 정리 | 🟢 PASS | [REVIEWER_DIRECTIVE.md](../REVIEWER_DIRECTIVE.md) | `.github/CLAUDE.md` v2.1 자동 트리거 sync, 진행계획서 §13 v1.2/v1.3, phase3_design P3-L2 갱신 |
+| 2026-04-26 | Phase 3 | external (DS) | EXT-AUD-004 Phase 3 Part 02 (DOF metrics + MT-008~010, 자동 트리거) | 🟡 PASS w/ 1 P0 | [00_FINAL_audit.md](external/reports/EXT-AUD-2026-04-26-004_phase3_part02_dof_metrics/00_FINAL_audit.md) | REVIEWER_DIRECTIVE v2.1 §10.5 자동 트리거 첫 적용. KPI K3 첫 정량 진척 (0%→50%). 메타 sync P0 1건 (CLAUDE.md v2.1) |
+| 2026-04-26 | meta | system | REVIEWER_DIRECTIVE v2.1 — 자동 외부감사 트리거 신설 | 🟢 PASS | [REVIEWER_DIRECTIVE.md](../REVIEWER_DIRECTIVE.md) | §10.5 신설: 코드 수정 + 다음지시 요청 시 4-md 폴더 자동 작성 |
 | 2026-04-26 | Phase 3 | mitigation | MT-008~010 DOF metric 후속 조치 | 🟢 PASS | [docs/phase3_DOF_analysis.md](../docs/phase3_DOF_analysis.md) | full angular defocus option, defocus-aware sampling guard, focus-stack DOF metric, defocus invariants 추가. 20/20 tests PASS |
 | 2026-04-26 | Phase 3 | external (DS) | EXT-AUD-003 Phase 3 Part 01 (PR #5 9ee22bb) | 🟢 PASS (clean) | [00_FINAL_audit.md](external/reports/EXT-AUD-2026-04-26-003_phase3_part01_defocus_sign/00_FINAL_audit.md) | MT-006/007 closure 검증. 위험 지수 7.2→5.5 (누적 -83%). 14/14 tests PASS. DefocusConvention dataclass 모범 사례. P2-NEW MT-008~010 등록 |
 | 2026-04-26 | Phase 3 | mitigation | MT-006 defocus 부호 컨벤션 + MT-007 gitignore | 🟢 PASS | [docs/phase3_design.md](../docs/phase3_design.md) | `src/wafer_topo.py`, `PupilSpec.defocus_m`, `tests/phase3_DOF.py` 추가. Phase 3 Part 01 진입 |
@@ -34,24 +37,29 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           9
-PASS:                8
-PASS WITH P0:        1
+총 감사 수:           12
+PASS:                10
+PASS WITH P0:        2
 CAUTION:             0
 MAJOR RISK:          0
 PHYSICAL VIOLATION:  0
 UNVERIFIED:          0
 
-추세 (3-point established: EXT-AUD-001 → 002 → 003):
-  위험 지수 가중 합계:  32.9 → 7.2 → 5.5 (누적 -83%) ★
-  P0 개수:             1 → 0 → 0   (-100% 유지)
-  P1 개수:             6 → 2 → 0   (-100% 누적)
-  Mitigation 처리율:    — → 86% → 100% → 100% (MT-008~010 완료)
-  단위 테스트 수:       5 → 9 → 14 → 20 (+300% 누적)
+추세 (4-point established: EXT-AUD-001 → 002 → 003 → 004):
+  위험 지수 가중 합계:  32.9 → 7.2 → 5.5 → 20.2 (메타 sync 시 spike 패턴)
+  P0 개수:             1 → 0 → 0 → 1 → 0 (MT-011 처리)
+  P1 개수:             6 → 2 → 0 → 3 → 1 (MT-012만 남김)
+  Mitigation 처리율 (누적): — → 86% → 100% → 100% → 93% (13/14)
+  단위 테스트 수:       5 → 9 → 14 → 20 (+300% 누적) ★
   Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 (100% 유지)
-  KPI 평균 진척률:      33% → 33% → 33%+ (K3 enabled by part 01)
-  누적 단순화:          7 → 7 → 11 (+57%, 정상)
-  단순화 4중 기록률:    100% 유지 ★
+  KPI K3 (DOF 정량):   0% → 0% → enabled → 50% ★ (첫 정량 진척)
+  KPI 평균 진척률:      33% → 33% → 33%+ → 42%
+  누적 단순화:          7 → 7 → 11 → 13 (P3-L5/L6 신규)
+  단순화 4중 기록률:    100% → 100% → 100% → 85% (drift 시작 — P3-L5/L6 명시 필요)
+
+식별된 시스템 패턴:
+  "Meta-sync drift" — REVIEWER_DIRECTIVE 변경 시 .github/CLAUDE.md sync 가 항상 P0
+  → 권고: 메타 변경 PR 안에 CLAUDE.md 동시 갱신 자동화 (P3 backlog)
 ```
 
 ---
@@ -62,7 +70,7 @@ UNVERIFIED:          0
 
 | ID | 생성일 | 등급 | 내용 | 데드라인 | 출처 |
 |----|--------|------|------|----------|------|
-| (없음) | | | | | |
+| MT-012 | 2026-04-26 | P1 | k₂ fitting 보고 (NA/pitch sweep + DOF = k₂·λ/NA² 정량 검증, KPI K3 100% 합격선) | Phase 3 Part 03 entry | EXT-AUD-004 §4.2 P1-01 (REC-EUV-01) |
 
 ---
 
@@ -80,6 +88,9 @@ UNVERIFIED:          0
 | MT-008 | 2026-04-26 | P2 | paraxial vs full angular OPL 비교 옵션 | `src/wafer_topo.py`, `tests/phase3_DOF.py` |
 | MT-009 | 2026-04-26 | P2 | defocus-aware pupil sampling sanity check | `src/wafer_topo.py`, `src/pupil.py`, `src/aerial.py` |
 | MT-010 | 2026-04-26 | P2 | defocus invariant tests 추가 | `tests/audits/test_fft_invariants.py` |
+| MT-011 | 2026-04-26 | **P0** | `.github/CLAUDE.md` 를 REVIEWER_DIRECTIVE v2.1 자동 트리거 절차로 sync | `.github/CLAUDE.md` |
+| MT-013 | 2026-04-26 | P1 | `진행계획서.md §13` v1.2 + v1.3 변경 이력 추가 | `진행계획서.md` |
+| MT-014 | 2026-04-26 | P1 | `docs/phase3_design.md §4` P3-L2 문구 갱신 | `docs/phase3_design.md` |
 
 ---
 
