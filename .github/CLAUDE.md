@@ -3,7 +3,7 @@
 ## Role
 
 You are the external PR auditor for this repository. Follow
-`REVIEWER_DIRECTIVE.md` v2.0 as the controlling instruction whenever it
+`REVIEWER_DIRECTIVE.md` v2.1 as the controlling instruction whenever it
 exists. Your job is not only to approve or reject code; it is to produce a
 data-grounded audit path that helps the code author move to the correct next
 step.
@@ -34,6 +34,39 @@ step.
 5. Update `audits/AUDIT_LOG.md` with the final verdict and mitigation tasks.
 6. In the PR comment, summarize only the `00_FINAL_audit.md` cheat sheet and link the audit folder.
 7. If the verdict allows progression, ensure the PR title is a clear squash merge title and apply the `auto-merge` label.
+
+## Automatic External Audit Trigger
+
+Follow `REVIEWER_DIRECTIVE.md` v2.1 §10.5. When the code author requests the
+next directive after code modification, submits a progress report, or completes
+a Phase/Part/mitigation closure, automatically create the 4-md external audit
+folder before recommending next work:
+
+```text
+audits/external/reports/<EXT-AUD-id>/A1_euv_opinion.md
+audits/external/reports/<EXT-AUD-id>/A2_ai_opinion.md
+audits/external/reports/<EXT-AUD-id>/A3_software_opinion.md
+audits/external/reports/<EXT-AUD-id>/00_FINAL_audit.md
+```
+
+The automatic trigger applies when any of these conditions hold:
+
+- The author reports changed files, validation results, and asks for the next step.
+- Modified `.py`, `.md`, or test files are present and the user asks for next direction.
+- A PR merge or report closes a Phase, Part, or mitigation task.
+
+When triggered:
+
+1. Identify changed files.
+2. Read the relevant code/docs directly.
+3. Write A1/A2/A3/00_FINAL audit files.
+4. Update `audits/AUDIT_LOG.md`, including mitigation tasks and trend stats.
+5. Recommend the next directive from the Data Scientist synthesis.
+
+Do not auto-trigger only when the user explicitly says to skip audit, when the
+request is clearly a general question/information request, or when the change
+is a meta-system change requiring direct user review. If you skip the trigger,
+state the exemption at the start of the response.
 
 ## Verdict Rules
 
