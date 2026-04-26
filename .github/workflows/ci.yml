@@ -24,12 +24,12 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: requirements-dev.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy scipy matplotlib
-          pip install pytest pytest-cov mypy ruff
+          pip install -r requirements-dev.txt
 
       - name: Lint with ruff
         run: ruff check src tests

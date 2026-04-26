@@ -20,8 +20,9 @@ jobs:
 
           phase_pattern='^phase[0-9]+-part[0-9]{2}-(add|update|fix|refactor|docs|test|audit|chore): .{12,}$'
           scope_pattern='^[a-z0-9][a-z0-9-]*-(add|update|fix|refactor|docs|test|audit|chore): .{12,}$'
+          dependabot_pattern='^build\(deps\): bump .{12,}$'
 
-          if [[ "${PR_TITLE}" =~ ${phase_pattern} || "${PR_TITLE}" =~ ${scope_pattern} ]]; then
+          if [[ "${PR_TITLE}" =~ ${phase_pattern} || "${PR_TITLE}" =~ ${scope_pattern} || "${PR_TITLE}" =~ ${dependabot_pattern} ]]; then
             echo "Clear merge title accepted: ${PR_TITLE}"
             exit 0
           fi
@@ -38,6 +39,7 @@ jobs:
             <scope>-<kind>: <clear summary>
             github-update: automate labeled squash merge
             docs-fix: clarify auto merge setup guide
+            build(deps): bump actions/checkout from 4 to 6
 
           Allowed kinds:
             add, update, fix, refactor, docs, test, audit, chore
