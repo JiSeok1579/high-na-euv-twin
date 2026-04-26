@@ -65,6 +65,20 @@ class StochasticDoseResult:
     cd_samples_m: tuple[float, ...]
 
 
+@dataclass(frozen=True)
+class MonteCarloConvergenceResult:
+    """Trial-count convergence gate for stochastic LWR estimates."""
+
+    dose: float
+    trial_results: tuple[StochasticDoseResult, ...]
+    previous_lwr_m: float
+    final_lwr_m: float
+    relative_lwr_change: float
+    tolerance_fraction: float
+    min_trials: int
+    converged: bool
+
+
 def stochastic_resist(
     aerial: np.ndarray,
     *,
@@ -183,6 +197,60 @@ def monte_carlo_lwr_curve(
     return tuple(results)
 
 
+def monte_carlo_convergence_gate(
+    aerial_line: np.ndarray,
+    pixel_size_m: float,
+    *,
+    dose: float = 1.0,
+    trial_counts: Iterable[int] = (100, 300, 1000),
+    tolerance_fraction: float = 0.10,
+    min_trials: int = 1000,
+    params: StochasticResistParams | None = None,
+    seed: int | None = None,
+    foreground: bool = True,
+    include_boundary: bool = False,
+) -> MonteCarloConvergenceResult:
+    """Evaluate whether stochastic LWR has stabilized by the final trial count."""
+    _validate_positive_finite(dose, "dose")
+    counts = _validate_convergence_inputs(
+        trial_counts,
+        tolerance_fraction,
+        min_trials,
+    )
+
+    results = tuple(
+        monte_carlo_lwr_curve(
+            aerial_line,
+            pixel_size_m,
+            [dose],
+            trials=count,
+            params=params,
+            seed=seed,
+            foreground=foreground,
+            include_boundary=include_boundary,
+        )[0]
+        for count in counts
+    )
+    previous = results[-2]
+    final = results[-1]
+    denominator = max(abs(final.lwr_m), float(np.finfo(np.float64).eps))
+    relative_change = abs(final.lwr_m - previous.lwr_m) / denominator
+    converged = (
+        final.trials >= min_trials and relative_change <= tolerance_fraction
+    )
+
+    return MonteCarloConvergenceResult(
+        dose=float(dose),
+        trial_results=results,
+        previous_lwr_m=previous.lwr_m,
+        final_lwr_m=final.lwr_m,
+        relative_lwr_change=float(relative_change),
+        tolerance_fraction=float(tolerance_fraction),
+        min_trials=int(min_trials),
+        converged=bool(converged),
+    )
+
+
 def lwr_decomposition_budget(
     dose: float,
     *,
@@ -290,6 +358,27 @@ def _validate_params(params: StochasticResistParams) -> None:
         or not 0.0 <= params.cross_compensation < 1.0
     ):
         raise ValueError("cross_compensation must satisfy 0 <= value < 1")
+
+
+def _validate_convergence_inputs(
+    trial_counts: Iterable[int],
+    tolerance_fraction: float,
+    min_trials: int,
+) -> tuple[int, ...]:
+    counts = tuple(int(value) for value in trial_counts)
+    if len(counts) < 2:
+        raise ValueError("trial_counts must contain at least two values")
+    if any(value <= 1 for value in counts):
+        raise ValueError("trial_counts must contain values greater than one")
+    if any(next_value <= value for value, next_value in zip(counts, counts[1:])):
+        raise ValueError("trial_counts must be strictly increasing")
+    if not np.isfinite(tolerance_fraction) or tolerance_fraction < 0.0:
+        raise ValueError("tolerance_fraction must be non-negative and finite")
+    if min_trials <= 1:
+        raise ValueError("min_trials must be greater than one")
+    if counts[-1] < min_trials:
+        raise ValueError("final trial count must be at least min_trials")
+    return counts
 
 
 def _validate_positive_finite(value: float, name: str) -> None:

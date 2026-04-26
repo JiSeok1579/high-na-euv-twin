@@ -8,6 +8,7 @@ import pytest
 from src.resist_stochastic import (
     StochasticResistParams,
     lwr_decomposition_budget,
+    monte_carlo_convergence_gate,
     monte_carlo_lwr_curve,
     stochastic_lwr_m,
     stochastic_resist,
@@ -93,6 +94,48 @@ def test_monte_carlo_lwr_curve_is_reproducible_with_seed():
     )
 
 
+def test_monte_carlo_convergence_gate_accepts_1000_trial_stable_lwr():
+    """The L3 Part 02 gate should pass after the 1000-trial LWR stabilizes."""
+    params = StochasticResistParams(
+        photon_density_per_unit=800.0,
+        material_threshold_sigma=0.005,
+    )
+    gate = monte_carlo_convergence_gate(
+        _soft_line(),
+        pixel_size_m=1e-9,
+        dose=1.0,
+        trial_counts=[100, 300, 1000],
+        tolerance_fraction=0.10,
+        params=params,
+        seed=1,
+    )
+
+    assert [point.trials for point in gate.trial_results] == [100, 300, 1000]
+    assert gate.min_trials == 1000
+    assert gate.final_lwr_m == pytest.approx(gate.trial_results[-1].lwr_m)
+    assert gate.relative_lwr_change <= gate.tolerance_fraction
+    assert gate.converged
+
+
+def test_monte_carlo_convergence_gate_fails_tight_tolerance():
+    """The same MC trace should fail when the convergence tolerance is too tight."""
+    gate = monte_carlo_convergence_gate(
+        _soft_line(),
+        pixel_size_m=1e-9,
+        dose=1.0,
+        trial_counts=[100, 300, 1000],
+        tolerance_fraction=0.01,
+        params=StochasticResistParams(
+            photon_density_per_unit=800.0,
+            material_threshold_sigma=0.005,
+        ),
+        seed=1,
+    )
+
+    assert gate.relative_lwr_change > gate.tolerance_fraction
+    assert not gate.converged
+
+
 def test_lwr_budget_reproduces_optical_material_smile_shape():
     """Optical LWR falls with dose while material LWR grows at high dose."""
     low = lwr_decomposition_budget(0.5, cd_m=36e-9)
@@ -132,6 +175,27 @@ def test_stochastic_resist_rejects_invalid_inputs():
         monte_carlo_lwr_curve(np.ones((2, 2)), 1e-9, [1.0], trials=2)
     with pytest.raises(ValueError, match="at least two"):
         stochastic_lwr_m([20e-9])
+
+
+def test_monte_carlo_convergence_gate_rejects_invalid_gate_inputs():
+    """Convergence gates need increasing counts and a final 1000-trial sample."""
+    with pytest.raises(ValueError, match="at least two"):
+        monte_carlo_convergence_gate(np.ones(8), 1e-9, trial_counts=[1000])
+    with pytest.raises(ValueError, match="strictly increasing"):
+        monte_carlo_convergence_gate(np.ones(8), 1e-9, trial_counts=[100, 100])
+    with pytest.raises(ValueError, match="at least min_trials"):
+        monte_carlo_convergence_gate(
+            np.ones(8),
+            1e-9,
+            trial_counts=[100, 300],
+            min_trials=1000,
+        )
+    with pytest.raises(ValueError, match="tolerance_fraction"):
+        monte_carlo_convergence_gate(
+            np.ones(8),
+            1e-9,
+            tolerance_fraction=-0.1,
+        )
 
 
 def _soft_line() -> np.ndarray:

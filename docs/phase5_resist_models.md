@@ -41,6 +41,7 @@ chain and dose-dependent LWR budget.
 | `focus_depth_resolved_resist(...)` | Runs focus-coupled aerial slices and depth-resolved thresholding. |
 | `stochastic_resist(...)` | Runs one photon → secondary electron → acid → deprotection → dissolution trial. |
 | `monte_carlo_lwr_curve(...)` | Aggregates seeded stochastic CD/LWR/LCDU over a dose sweep. |
+| `monte_carlo_convergence_gate(...)` | Compares staged trial counts and gates 1000-trial LWR stability. |
 | `lwr_decomposition_budget(...)` | Reports optical/material/cross LWR variance terms. |
 | `stochastic_lwr_m(...)` | Converts Monte Carlo CD samples into a 3σ LWR estimate. |
 | `critical_dimension(...)` | Measures mean foreground run width on a 1-D printed line. |
@@ -99,6 +100,12 @@ The Phase 5 L3 Part 01 tests cover:
 - exported 3σ LWR sample convention
 - invalid stochastic dose, shape, trial, and parameter rejection
 
+The Phase 5 L3 Part 02 tests cover:
+
+- 1000-trial Monte Carlo LWR convergence passing under the configured tolerance
+- the same seeded trace failing under an intentionally tight tolerance
+- convergence gate validation for trial count, minimum trial, and tolerance inputs
+
 Current targets:
 
 | Case | Target | Result |
@@ -112,6 +119,7 @@ Current targets:
 | L2 depth | focus-depth slices -> dose/exposure stack | PASS |
 | L2 profile | depth exposure stack -> CD/SWA proxy | PASS |
 | L3 stochastic | seeded MC -> CD/LWR/LCDU + budget | PASS |
+| L3 convergence | 100/300/1000 trials -> LWR stability gate | PASS |
 
 ## 4. Limitations
 
@@ -131,4 +139,5 @@ resist, Gaussian blur, depth-resolved dose, and CD/EPE metrics. Phase 5 L2
 Part 02 adds a deterministic through-resist CD profile and SWA proxy; calibrated
 dissolution geometry remains a later target. Phase 5 L3 Part 01 adds seeded
 stochastic trials, CD/LWR/LCDU summaries, and a qualitative optical/material
-LWR budget.
+LWR budget. Phase 5 L3 Part 02 adds a 1000-trial convergence gate for stochastic
+LWR stability.

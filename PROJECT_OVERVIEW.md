@@ -232,7 +232,7 @@ resist: threshold
 - ✅ `src/optics/zernike.py` — Zernike wavefront helper 공용화
 - ✅ `src/wafer_topo.py` — Phase 3 defocus sign convention + pupil phase helper
 - ✅ `src/dof.py` — Phase 3 focus-stack contrast + nominal DOF metric + k2 fit + focus-drilling average
-- ✅ `src/resist_threshold.py`, `src/resist_blur.py`, `src/resist_depth.py`, `src/resist_stochastic.py`, `src/metrics.py` — Phase 5 MVP/L1/L2/L3 threshold + Gaussian blur + depth/profile + stochastic CD/LWR/LCDU metrics
+- ✅ `src/resist_threshold.py`, `src/resist_blur.py`, `src/resist_depth.py`, `src/resist_stochastic.py`, `src/metrics.py` — Phase 5 MVP/L1/L2/L3 threshold + Gaussian blur + depth/profile + stochastic CD/LWR/LCDU/convergence metrics
 - ⏳ `src/` (Phase 2–6) — `illuminator.py`, `mask_3d.py`, `smo.py`, `pmwo.py`
 - ✅ `tests/phase1_aerial_image.py` — 5 unit tests, all PASS
 - ✅ `tests/audits/test_fft_invariants.py` — Parseval / fftshift / NA scaling / grid refinement invariant tests
@@ -240,7 +240,7 @@ resist: threshold
 - ✅ `tests/phase5_threshold.py`, `tests/phase5_blur.py`, `tests/phase5_depth.py`, `tests/phase5_stochastic.py`, `tests/integration_end_to_end.py` — threshold/blur/depth/stochastic resist + end-to-end tests
 - ⏳ `tests/` (Phase 2–6) — 후속 정밀화 단위 테스트
 - ✅ `notebooks/0_first_aerial_image.ipynb` — Phase 1 데모
-- ✅ `notebooks/4a_threshold_resist.ipynb`, `notebooks/4b_resist_levels.ipynb` — Phase 5 threshold/blur/depth/profile/stochastic 데모
+- ✅ `notebooks/4a_threshold_resist.ipynb`, `notebooks/4b_resist_levels.ipynb` — Phase 5 threshold/blur/depth/profile/stochastic/convergence 데모
 - ⏳ `notebooks/` (Phase 2–6) — 후속 데모
 - ⏳ `data/absorber_nk/` — absorber n,k 데이터 (paper 7, 17 후보 재료)
 - ✅ `docs/phase1_design.md` — Phase 1 설계 결정 + 단순화 명시
@@ -248,7 +248,7 @@ resist: threshold
 - ✅ `.github/` + `scripts/configure_github_automerge.sh` — CI, Claude review, title-gated auto-merge 셋업
 - ✅ `docs/phase3_design.md` — defocus 부호 컨벤션 + DOF/k2/focus-drilling 현재 한계
 - ✅ `docs/phase3_DOF_analysis.md` — DOF metric Part 03 분석 노트
-- ✅ `docs/phase5_resist_models.md` — Threshold/Gaussian blur resist + 한계 기록
+- ✅ `docs/phase5_resist_models.md` — Threshold/Gaussian blur/depth/stochastic resist + 한계 기록
 - ⏳ `docs/` (Phase 2–6, API) — 후속 문서
 
 ### 6.3 권장 디렉토리 스캐폴딩 (제안)
@@ -449,5 +449,8 @@ MVP 3편:           #19 (좌표) + #9 ★OA (SMO 구현 가이드) + #12 (M3D �
 - **2026-04-26** Phase 5 L3 Part 01 (Stochastic LWR MVP) 구현 완료.
   - `src/resist_stochastic.py`, `tests/phase5_stochastic.py` 추가
   - photon→secondary→acid→deprotection→dissolution chain, seeded MC LWR/LCDU, optical/material/cross budget 검증
+- **2026-04-26** Phase 5 L3 Part 02 (MC Convergence Gate) 구현 완료.
+  - `monte_carlo_convergence_gate` 추가
+  - 100/300/1000 trial LWR 안정성 판정, tight tolerance 실패, gate 입력 검증
 
 > 새 논문 추가 / Phase 진행 / 코드 모듈 추가 시 본 문서의 §2(인벤토리), §5(로드맵), §6(산출물)을 동시 업데이트할 것.
