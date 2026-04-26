@@ -176,13 +176,16 @@ on:
 jobs:
   claude:
     if: |
-      (github.event_name == 'pull_request') ||
+      (github.actor != 'dependabot[bot]') &&
+      ((github.event_name == 'pull_request') ||
       (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))))
 
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      HAS_ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
 
     permissions:
       contents: write          # 코드 push, 머지
@@ -197,12 +200,18 @@ jobs:
           fetch-depth: 0
 
       - name: Run Claude Code
+        if: env.HAS_ANTHROPIC_API_KEY == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
           # 본 프로젝트 전용 시스템 프롬프트
           claude_args: |
             --append-system-prompt "$(cat .github/CLAUDE.md)"
+
+      - name: Skip Claude Code when secret is missing
+        if: env.HAS_ANTHROPIC_API_KEY != 'true'
+        run: |
+          echo "ANTHROPIC_API_KEY is not configured; skipping Claude Code Review."
 ```
 
 ### 3.4 PR title 검증 워크플로 — `.github/workflows/pr-title.yml`
@@ -930,10 +939,18 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - dependencies
+      - python
+      - auto-merge
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+    labels:
+      - dependencies
+      - github_actions
+      - auto-merge
 ```
 
 ### 14.2 Issue 템플릿 — `.github/ISSUE_TEMPLATE/audit_request.md`
