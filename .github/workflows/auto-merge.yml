@@ -62,7 +62,8 @@ jobs:
           pr_title="$(gh pr view "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --json title --jq '.title')"
           phase_pattern='^phase[0-9]+-part[0-9]{2}-(add|update|fix|refactor|docs|test|audit|chore): .{12,}$'
           scope_pattern='^[a-z0-9][a-z0-9-]*-(add|update|fix|refactor|docs|test|audit|chore): .{12,}$'
-          if [[ ! "${pr_title}" =~ ${phase_pattern} && ! "${pr_title}" =~ ${scope_pattern} ]]; then
+          dependabot_pattern='^build\(deps\): bump .{12,}$'
+          if [[ ! "${pr_title}" =~ ${phase_pattern} && ! "${pr_title}" =~ ${scope_pattern} && ! "${pr_title}" =~ ${dependabot_pattern} ]]; then
             echo "PR title is not a clear merge title: ${pr_title}"
             echo "Use: phase<phase>-part<NN>-<kind>: <clear summary>"
             echo "Or:  <scope>-<kind>: <clear summary>"

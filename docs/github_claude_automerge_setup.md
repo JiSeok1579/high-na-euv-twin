@@ -130,12 +130,12 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          cache-dependency-path: requirements-dev.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install numpy scipy matplotlib
-          pip install pytest pytest-cov mypy ruff
+          pip install -r requirements-dev.txt
 
       - name: Lint with ruff
         run: ruff check src tests
@@ -232,8 +232,9 @@ jobs:
 
           phase_pattern='^phase[0-9]+-part[0-9]{2}-(add|update|fix|refactor|docs|test|audit|chore): .{12,}$'
           scope_pattern='^[a-z0-9][a-z0-9-]*-(add|update|fix|refactor|docs|test|audit|chore): .{12,}$'
+          dependabot_pattern='^build\(deps\): bump .{12,}$'
 
-          if [[ "${PR_TITLE}" =~ ${phase_pattern} || "${PR_TITLE}" =~ ${scope_pattern} ]]; then
+          if [[ "${PR_TITLE}" =~ ${phase_pattern} || "${PR_TITLE}" =~ ${scope_pattern} || "${PR_TITLE}" =~ ${dependabot_pattern} ]]; then
             echo "Clear merge title accepted: ${PR_TITLE}"
             exit 0
           fi
@@ -250,6 +251,7 @@ jobs:
             <scope>-<kind>: <clear summary>
             github-update: automate labeled squash merge
             docs-fix: clarify auto merge setup guide
+            build(deps): bump actions/checkout from 4 to 6
 
           Allowed kinds:
             add, update, fix, refactor, docs, test, audit, chore
@@ -326,7 +328,8 @@ jobs:
           pr_title="$(gh pr view "${PR_NUMBER}" --repo "${GITHUB_REPOSITORY}" --json title --jq '.title')"
           phase_pattern='^phase[0-9]+-part[0-9]{2}-(add|update|fix|refactor|docs|test|audit|chore): .{12,}$'
           scope_pattern='^[a-z0-9][a-z0-9-]*-(add|update|fix|refactor|docs|test|audit|chore): .{12,}$'
-          if [[ ! "${pr_title}" =~ ${phase_pattern} && ! "${pr_title}" =~ ${scope_pattern} ]]; then
+          dependabot_pattern='^build\(deps\): bump .{12,}$'
+          if [[ ! "${pr_title}" =~ ${phase_pattern} && ! "${pr_title}" =~ ${scope_pattern} && ! "${pr_title}" =~ ${dependabot_pattern} ]]; then
             echo "PR title is not a clear merge title: ${pr_title}"
             echo "Use: phase<phase>-part<NN>-<kind>: <clear summary>"
             echo "Or:  <scope>-<kind>: <clear summary>"

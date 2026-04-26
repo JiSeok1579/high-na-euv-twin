@@ -56,6 +56,9 @@ ensure_label "${AUTO_MERGE_LABEL}" "0e8a16" "Enable full automatic squash merge 
 ensure_label "blocked" "d73a4a" "Blocked by failing checks, unresolved review, or audit risk"
 ensure_label "audit" "5319e7" "Requires or updates the 4-role audit workflow"
 ensure_label "needs-title-fix" "fbca04" "PR title must be rewritten before it can become a squash merge title"
+ensure_label "dependencies" "0366d6" "Pull requests that update dependencies"
+ensure_label "python" "3572A5" "Python dependency or runtime update"
+ensure_label "github_actions" "000000" "GitHub Actions workflow dependency update"
 
 if [ "${branch_exists}" = "false" ]; then
   echo "Branch '${BRANCH}' does not exist on ${REPO} yet."
