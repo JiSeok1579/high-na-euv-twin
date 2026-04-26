@@ -89,6 +89,20 @@ gh secret set ANTHROPIC_API_KEY \
 
 Claude Code가 PR 머지·라벨링·comment 작성을 자동으로 하려면 별도 토큰이 필요할 수 있다. 첫 셋업에는 기본 `GITHUB_TOKEN` 으로 충분.
 
+### 2.4 (옵션) Workflow 파일 변경 PR까지 자동 머지
+
+GitHub Actions workflow 파일(`.github/workflows/*.yml`)을 바꾸는 PR은 기본 `GITHUB_TOKEN`으로 merge가 차단될 수 있다. 예: Dependabot이 `actions/checkout` 또는 `actions/setup-python`을 업데이트하는 PR.
+
+이 PR까지 완전 자동 머지하려면 `workflow` scope가 포함된 fine-grained 또는 classic PAT를 만들고 repository secret으로 등록한다.
+
+```bash
+gh secret set AUTOMERGE_TOKEN \
+  --repo JiSeok1579/high-na-euv-twin \
+  --body "<token-with-workflow-scope>"
+```
+
+`AUTOMERGE_TOKEN`이 없으면 일반 코드/문서/파이썬 의존성 자동 머지는 유지되고, workflow 변경 PR은 수동 확인 대상으로 남긴다.
+
 ---
 
 ## 3. STEP 2 — GitHub Actions 워크플로 파일 생성
@@ -302,7 +316,7 @@ jobs:
     steps:
       - name: Enable auto-merge for labeled PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AUTOMERGE_TOKEN || github.token }}
           AUTO_MERGE_LABEL: auto-merge
           PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
         run: |
@@ -950,7 +964,6 @@ updates:
     labels:
       - dependencies
       - github_actions
-      - auto-merge
 ```
 
 ### 14.2 Issue 템플릿 — `.github/ISSUE_TEMPLATE/audit_request.md`
