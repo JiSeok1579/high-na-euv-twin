@@ -231,11 +231,11 @@ resist: threshold
 - ✅ `src/` (Phase 1) — `constants.py`, `pupil.py`, `mask.py`, `aerial.py`
 - ✅ `src/optics/zernike.py` — Zernike wavefront helper 공용화
 - ✅ `src/wafer_topo.py` — Phase 3 defocus sign convention + pupil phase helper
-- ✅ `src/dof.py` — Phase 3 focus-stack contrast + nominal DOF metric
+- ✅ `src/dof.py` — Phase 3 focus-stack contrast + nominal DOF metric + k2 fit + focus-drilling average
 - ⏳ `src/` (Phase 2–6) — `illuminator.py`, `mask_3d.py`, `resist_*.py`, `smo.py`, `pmwo.py`, `metrics.py`
 - ✅ `tests/phase1_aerial_image.py` — 5 unit tests, all PASS
 - ✅ `tests/audits/test_fft_invariants.py` — Parseval / fftshift / NA scaling / grid refinement invariant tests
-- ✅ `tests/phase3_DOF.py` — defocus sign / conjugacy / sampling / DOF metric regression tests
+- ✅ `tests/phase3_DOF.py` — defocus sign / conjugacy / sampling / DOF / k2 / focus-drilling regression tests
 - ⏳ `tests/` (Phase 2–6) — 후속 Phase 단위 테스트
 - ✅ `notebooks/0_first_aerial_image.ipynb` — Phase 1 데모
 - ⏳ `notebooks/` (Phase 2–6) — 후속 데모
@@ -243,8 +243,8 @@ resist: threshold
 - ✅ `docs/phase1_design.md` — Phase 1 설계 결정 + 단순화 명시
 - ✅ `.pre-commit-config.yaml` — ruff + basic file hygiene hooks
 - ✅ `.github/` + `scripts/configure_github_automerge.sh` — CI, Claude review, title-gated auto-merge 셋업
-- ✅ `docs/phase3_design.md` — defocus 부호 컨벤션 + 현재 한계
-- ✅ `docs/phase3_DOF_analysis.md` — DOF metric Part 02 분석 노트
+- ✅ `docs/phase3_design.md` — defocus 부호 컨벤션 + DOF/k2/focus-drilling 현재 한계
+- ✅ `docs/phase3_DOF_analysis.md` — DOF metric Part 03 분석 노트
 - ⏳ `docs/` (Phase 2–6, API) — 후속 문서
 
 ### 6.3 권장 디렉토리 스캐폴딩 (제안)

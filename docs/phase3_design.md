@@ -4,9 +4,9 @@
 
 This document fixes the Phase 3 defocus sign convention and records the first
 nominal-focus DOF metric. The current implementation covers constant focus
-offset in the pupil phase plus focus-stack contrast metrics. Spatially varying
-height maps, focus-exposure matrices, and micro focus-drilling remain later
-Phase 3 work.
+offset in the pupil phase, focus-stack contrast metrics, `k2` fitting, and a
+micro focus-drilling depth-slice average. Spatially varying height maps and
+focus-exposure matrices remain later Phase 3 work.
 
 ## 2. Defocus Sign Convention
 
@@ -45,21 +45,23 @@ Changing it later requires a migration note and updated tests.
 | ID | Limitation | Deferred To |
 |----|------------|-------------|
 | P3-L1 | Only constant defocus is implemented; spatial `z(x, y)` maps are not yet propagated locally. | Phase 3 topography map |
-| P3-L2 | DOF is measurable, but broad `k2` fitting is deferred. | Phase 3 analysis sweep |
-| P3-L3 | No micro focus-drilling depth slices. | Phase 3 part 3 |
+| P3-L2 | `k2` fitting exists for nominal DOF cases; paper #14 LCDU/process-window matching is not yet implemented. | Phase 3 paper #14 validation |
+| P3-L3 | Micro focus-drilling supports depth-slice image averaging; depth-resolved resist coupling is not yet implemented. | Phase 5 depth resist |
 | P3-L4 | Scalar coherent optics remains inherited from Phase 1. | Phase 2/4 |
 
 ## 5. Files
 
 - `src/wafer_topo.py` — sign convention, height-to-defocus mapping, pupil phase helper
-- `src/dof.py` — focus-stack contrast and nominal DOF window metrics
+- `src/dof.py` — focus-stack contrast, nominal DOF window metrics, `k2` fit, focus-drilling average
 - `src/pupil.py` — `PupilSpec.defocus_m` integration
 - `src/aerial.py` — aerial-plane pupil defocus integration
-- `tests/phase3_DOF.py` — sign, conjugacy, sampling, focus-stack, and zero-defocus regression tests
+- `tests/phase3_DOF.py` — sign, conjugacy, sampling, focus-stack, `k2`, focus-drilling, and zero-defocus regression tests
 - `tests/audits/test_fft_invariants.py` — defocus unitary and zero-identity invariants
 
 ## 6. Exit Status
 
-MT-006 through MT-010 are resolved by this design and the matching tests. Phase
-3 now has a nominal focus-stack metric; KPI K3 is still incomplete until a
-broader sweep estimates `k2` against `k2 * lambda / NA^2`.
+MT-006 through MT-012 are resolved by this design and the matching tests. Phase
+3 now has a nominal focus-stack metric, a Rayleigh `k2` formula fit, and a
+micro focus-drilling average. KPI K3 is complete for the project-level DOF
+formula gate; broader LCDU/process-window validation remains future paper #14
+work.
