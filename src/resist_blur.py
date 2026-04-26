@@ -2,11 +2,26 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import math
+from typing import Iterable
 
 import numpy as np
 
+from .metrics import critical_dimension, edge_positions, mean_absolute_epe
 from .resist_threshold import threshold_resist
+
+
+@dataclass(frozen=True)
+class BlurDoseSweepPoint:
+    """One deterministic point in a Gaussian-blur/dose sweep."""
+
+    sigma_m: float
+    dose: float
+    cd_m: float
+    mean_abs_epe_m: float | None
+    transition_width_m: float
+    lwr_proxy_m: float
 
 
 def gaussian_kernel_1d(
@@ -77,6 +92,60 @@ def blurred_threshold_resist(
     return threshold_resist(blurred, dose=dose, threshold=threshold)
 
 
+def blur_dose_sweep(
+    aerial_line: np.ndarray,
+    target_line: np.ndarray,
+    pixel_size_m: float,
+    sigma_values_m: Iterable[float],
+    doses: Iterable[float],
+    *,
+    threshold: float = 0.3,
+    truncate: float = 3.0,
+) -> tuple[BlurDoseSweepPoint, ...]:
+    """Evaluate CD/EPE and a deterministic LWR proxy over sigma and dose.
+
+    `lwr_proxy_m` is `transition_width_m / sqrt(dose)`. It is not stochastic
+    LWR; it is a Level 1 monotonic proxy used before Monte Carlo is introduced.
+    """
+    line = _as_aerial_line(aerial_line)
+    target = _as_target_line(target_line, expected_size=line.size)
+    _validate_pixel_size(pixel_size_m)
+
+    sigmas = tuple(float(sigma) for sigma in sigma_values_m)
+    dose_values = tuple(float(dose) for dose in doses)
+    if not sigmas:
+        raise ValueError("sigma_values_m must contain at least one value")
+    if not dose_values:
+        raise ValueError("doses must contain at least one value")
+    if any(not np.isfinite(dose) or dose <= 0.0 for dose in dose_values):
+        raise ValueError("doses must contain positive finite values")
+
+    target_edges = edge_positions(target, pixel_size_m)
+    points: list[BlurDoseSweepPoint] = []
+    for sigma_m in sigmas:
+        blurred = gaussian_blur(
+            line,
+            pixel_size_m,
+            sigma_m,
+            truncate=truncate,
+        )
+        width_m = transition_width(blurred, pixel_size_m)
+        for dose in dose_values:
+            printed = threshold_resist(blurred, dose=dose, threshold=threshold)
+            printed_edges = edge_positions(printed, pixel_size_m)
+            points.append(
+                BlurDoseSweepPoint(
+                    sigma_m=sigma_m,
+                    dose=dose,
+                    cd_m=critical_dimension(printed, pixel_size_m),
+                    mean_abs_epe_m=_mean_epe_or_none(target_edges, printed_edges),
+                    transition_width_m=width_m,
+                    lwr_proxy_m=width_m / math.sqrt(dose),
+                )
+            )
+    return tuple(points)
+
+
 def transition_width(
     intensity_line: np.ndarray,
     pixel_size_m: float,
@@ -108,6 +177,37 @@ def transition_width(
     return float(np.count_nonzero(transition) * pixel_size_m)
 
 
+def _as_aerial_line(aerial_line: np.ndarray) -> np.ndarray:
+    line = np.asarray(aerial_line, dtype=np.float64)
+    if line.ndim != 1:
+        raise ValueError("aerial_line must be 1-D")
+    if line.size == 0:
+        raise ValueError("aerial_line must contain at least one pixel")
+    if not np.all(np.isfinite(line)):
+        raise ValueError("aerial_line must contain finite values")
+    if np.any(line < 0.0):
+        raise ValueError("aerial_line intensity must be non-negative")
+    return line
+
+
+def _as_target_line(target_line: np.ndarray, *, expected_size: int) -> np.ndarray:
+    target = np.asarray(target_line, dtype=bool)
+    if target.ndim != 1:
+        raise ValueError("target_line must be 1-D")
+    if target.size != expected_size:
+        raise ValueError("target_line must match aerial_line size")
+    return target
+
+
+def _mean_epe_or_none(
+    target_edges_m: np.ndarray,
+    printed_edges_m: np.ndarray,
+) -> float | None:
+    if target_edges_m.size == 0 or target_edges_m.shape != printed_edges_m.shape:
+        return None
+    return mean_absolute_epe(target_edges_m, printed_edges_m)
+
+
 def _convolve_along_axis(
     image: np.ndarray,
     kernel: np.ndarray,
@@ -135,3 +235,8 @@ def _validate_blur_inputs(
         raise ValueError("pixel_size_m must be a positive finite value")
     if not np.isfinite(truncate) or truncate <= 0.0:
         raise ValueError("truncate must be a positive finite value")
+
+
+def _validate_pixel_size(pixel_size_m: float) -> None:
+    if not np.isfinite(pixel_size_m) or pixel_size_m <= 0.0:
+        raise ValueError("pixel_size_m must be a positive finite value")

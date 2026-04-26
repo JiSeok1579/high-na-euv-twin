@@ -19,6 +19,7 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-26 | Phase 5 | implementation | Phase 5 L1 Part 02 blur sigma-dose sweep | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | `blur_dose_sweep` 추가. CD/EPE/transition width/LWR proxy table, sigma/dose 방향성 회귀, 4b notebook sweep 추가. 42/42 tests PASS |
 | 2026-04-26 | Phase 5 | implementation | Phase 5 L1 Part 01 Gaussian blur resist | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | `resist_blur.py`, `tests/phase5_blur.py`, `4b_resist_levels.ipynb` 추가. Gaussian blur kernel/edge-spread/end-to-end CD 검증. 38/38 tests PASS |
 | 2026-04-26 | Phase 5 | implementation | Phase 5 MVP threshold resist + end-to-end pipeline | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | KPI K1 end-to-end MVP 합격. `resist_threshold.py`, `metrics.py`, notebook, 7개 신규 테스트 추가. 32/32 tests PASS |
 | 2026-04-26 | Phase 3 | mitigation | MT-012 Phase 3 Part 03 k₂ fitting + focus-drilling MVP | 🟢 PASS | [docs/phase3_DOF_analysis.md](../docs/phase3_DOF_analysis.md) | K3 formula gate 50%→100%. `fit_k2_from_dof_cases`, `fit_k2_from_metrics`, `focus_drilling_average` 추가. 25/25 tests PASS |
@@ -40,8 +41,8 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           15
-PASS:                13
+총 감사 수:           16
+PASS:                14
 PASS WITH P0:        2
 CAUTION:             0
 MAJOR RISK:          0
@@ -53,11 +54,11 @@ UNVERIFIED:          0
   P0 개수:             1 → 0 → 0 → 1 → 0 (MT-011 처리)
   P1 개수:             6 → 2 → 0 → 3 → 1 → 0 (MT-012 처리)
   Mitigation 처리율 (누적): — → 86% → 100% → 100% → 93% → 100% (14/14)
-  단위 테스트 수:       5 → 9 → 14 → 20 → 25 → 32 → 38 (+660% 누적) ★
-  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 → 25/25 → 32/32 → 38/38 (100% 유지)
+  단위 테스트 수:       5 → 9 → 14 → 20 → 25 → 32 → 38 → 42 (+740% 누적) ★
+  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 → 25/25 → 32/32 → 38/38 → 42/42 (100% 유지)
   KPI K3 (DOF 정량):   0% → 0% → enabled → 50% → 100% ★
   KPI K1 (end-to-end): optical only → full MVP ★
-  KPI 평균 진척률:      33% → 33% → 33%+ → 42% → 50% → 58% → 61%
+  KPI 평균 진척률:      33% → 33% → 33%+ → 42% → 50% → 58% → 61% → 63%
   누적 단순화:          7 → 7 → 11 → 13 (P3-L5/L6 신규)
   단순화 4중 기록률:    100% → 100% → 100% → 85% (drift 시작 — P3-L5/L6 명시 필요)
 
