@@ -8,6 +8,7 @@ import pytest
 from src import constants as C
 from src.aerial import aerial_image, contrast
 from src.mask import MaskGrid, kirchhoff_mask, line_space_pattern
+from src.wafer_topo import defocus_pupil_phase
 
 
 def test_fft_parseval_round_trip():
@@ -54,3 +55,19 @@ def test_grid_refinement_converges_for_resolved_pitch():
     assert contrasts[0] > 0.3
     assert contrasts[1] > 0.3
     assert abs(contrasts[1] - contrasts[0]) < 0.15
+
+
+def test_defocus_phase_is_unitary():
+    """Defocus should only change phase, never pupil magnitude."""
+    rho = np.linspace(0.0, 1.0, 128)
+    phase = defocus_pupil_phase(rho, 75e-9)
+
+    assert np.allclose(np.abs(phase), np.ones_like(rho))
+
+
+def test_zero_defocus_phase_is_identity():
+    """Zero defocus is the exact identity multiplier."""
+    rho = np.linspace(0.0, 1.0, 128)
+    phase = defocus_pupil_phase(rho, 0.0)
+
+    assert np.allclose(phase, np.ones_like(phase))

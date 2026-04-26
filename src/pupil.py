@@ -29,7 +29,7 @@ import numpy as np
 
 from . import constants as C
 from .optics import ZernikeCoeffs, wavefront
-from .wafer_topo import defocus_pupil_phase
+from .wafer_topo import DefocusApproximation, defocus_pupil_phase, validate_defocus_sampling
 
 
 @dataclass(frozen=True)
@@ -42,6 +42,7 @@ class PupilSpec:
     wavelength: float = C.LAMBDA_EUV
     zernike: ZernikeCoeffs = field(default_factory=dict)
     defocus_m: float = 0.0
+    defocus_approximation: DefocusApproximation = "paraxial"
 
     def __post_init__(self) -> None:
         if self.grid_size <= 0 or self.grid_size % 2 != 0:
@@ -54,6 +55,14 @@ class PupilSpec:
             raise ValueError("wavelength must be positive")
         if not np.isfinite(self.defocus_m):
             raise ValueError("defocus_m must be finite")
+        if self.defocus_m != 0.0:
+            validate_defocus_sampling(
+                self.grid_size,
+                self.defocus_m,
+                na=self.na,
+                wavelength=self.wavelength,
+                approximation=self.defocus_approximation,
+            )
 
 
 def _frequency_grid(grid_size: int) -> tuple[np.ndarray, np.ndarray]:
@@ -93,6 +102,7 @@ def build_pupil(spec: PupilSpec) -> np.ndarray:
             spec.defocus_m,
             na=spec.na,
             wavelength=spec.wavelength,
+            approximation=spec.defocus_approximation,
         )
 
     return (amplitude * phase).astype(np.complex128)

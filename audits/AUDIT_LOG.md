@@ -19,6 +19,8 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-26 | Phase 3 | mitigation | MT-008~010 DOF metric 후속 조치 | 🟢 PASS | [docs/phase3_DOF_analysis.md](../docs/phase3_DOF_analysis.md) | full angular defocus option, defocus-aware sampling guard, focus-stack DOF metric, defocus invariants 추가. 20/20 tests PASS |
+| 2026-04-26 | Phase 3 | external (DS) | EXT-AUD-003 Phase 3 Part 01 (PR #5 9ee22bb) | 🟢 PASS (clean) | [00_FINAL_audit.md](external/reports/EXT-AUD-2026-04-26-003_phase3_part01_defocus_sign/00_FINAL_audit.md) | MT-006/007 closure 검증. 위험 지수 7.2→5.5 (누적 -83%). 14/14 tests PASS. DefocusConvention dataclass 모범 사례. P2-NEW MT-008~010 등록 |
 | 2026-04-26 | Phase 3 | mitigation | MT-006 defocus 부호 컨벤션 + MT-007 gitignore | 🟢 PASS | [docs/phase3_design.md](../docs/phase3_design.md) | `src/wafer_topo.py`, `PupilSpec.defocus_m`, `tests/phase3_DOF.py` 추가. Phase 3 Part 01 진입 |
 | 2026-04-26 | Phase 1 | external (DS) | EXT-AUD-002 Post-Audit Fixes (PR #4 ee30c04) | 🟢 PASS (clean) | [00_FINAL_audit.md](external/reports/EXT-AUD-2026-04-26-002_phase1_post_audit_fixes/00_FINAL_audit.md) | MT-001~005 100%/83% 처리. 위험 지수 32.9→7.2 (-78%). 9/9 tests PASS. 자동 squash merge 검증 |
 | 2026-04-26 | meta | mitigation | EXT-AUD-001 P0/P1 후속 조치 | 🟢 PASS | [REVIEWER_DIRECTIVE.md](../REVIEWER_DIRECTIVE.md) | MT-001~005 처리: CLAUDE.md v2 sync, 진행계획서 §5.1 갱신, Zernike 공용화, FFT invariant test, pre-commit 도입 |
@@ -32,21 +34,24 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           7
-PASS:                6
+총 감사 수:           9
+PASS:                8
 PASS WITH P0:        1
 CAUTION:             0
 MAJOR RISK:          0
 PHYSICAL VIOLATION:  0
 UNVERIFIED:          0
 
-추세 (EXT-AUD-001 → 002):
-  위험 지수 가중 합계:  32.9 → 7.2 (-78%) ★
-  P0 개수:             1 → 0   (-100%)
-  Mitigation 처리율:    100% (7/7, MT-006/007 완료)
-  단위 테스트 수:       5 → 9 → 14 (Phase 3 Part 01 포함)
-  KPI 평균 진척률:      33% (유지, mitigation PR이라 변화 없음)
-  단순화 4중 기록률:    100% 유지
+추세 (3-point established: EXT-AUD-001 → 002 → 003):
+  위험 지수 가중 합계:  32.9 → 7.2 → 5.5 (누적 -83%) ★
+  P0 개수:             1 → 0 → 0   (-100% 유지)
+  P1 개수:             6 → 2 → 0   (-100% 누적)
+  Mitigation 처리율:    — → 86% → 100% → 100% (MT-008~010 완료)
+  단위 테스트 수:       5 → 9 → 14 → 20 (+300% 누적)
+  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 (100% 유지)
+  KPI 평균 진척률:      33% → 33% → 33%+ (K3 enabled by part 01)
+  누적 단순화:          7 → 7 → 11 (+57%, 정상)
+  단순화 4중 기록률:    100% 유지 ★
 ```
 
 ---
@@ -72,6 +77,9 @@ UNVERIFIED:          0
 | MT-005 | 2026-04-26 | P1 | pre-commit hook 도입 | `.pre-commit-config.yaml`, `requirements-dev.txt` |
 | MT-006 | 2026-04-26 | P1 | Phase 3 defocus 부호 컨벤션 fix + 테스트 | `docs/phase3_design.md`, `src/wafer_topo.py`, `tests/phase3_DOF.py` |
 | MT-007 | 2026-04-26 | P1 | Python cache ignore pattern 명시 확인 | `.gitignore` |
+| MT-008 | 2026-04-26 | P2 | paraxial vs full angular OPL 비교 옵션 | `src/wafer_topo.py`, `tests/phase3_DOF.py` |
+| MT-009 | 2026-04-26 | P2 | defocus-aware pupil sampling sanity check | `src/wafer_topo.py`, `src/pupil.py`, `src/aerial.py` |
+| MT-010 | 2026-04-26 | P2 | defocus invariant tests 추가 | `tests/audits/test_fft_invariants.py` |
 
 ---
 
