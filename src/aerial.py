@@ -34,7 +34,8 @@ import numpy as np
 
 from . import constants as C
 from .mask import MaskGrid
-from .pupil import PupilSpec, build_pupil
+from .optics import wavefront
+from .pupil import PupilSpec
 
 
 @dataclass(frozen=True)
@@ -95,9 +96,7 @@ def _build_aerial_pupil(
     amplitude = (inside & outside_obs).astype(np.float64)
 
     if zernike:
-        from .pupil import _wavefront
-
-        w_waves = _wavefront(rho, theta, zernike)
+        w_waves = wavefront(rho, theta, zernike)
         phase = np.exp(1j * 2.0 * np.pi * w_waves)
     else:
         phase = np.ones_like(amplitude, dtype=np.complex128)

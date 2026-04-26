@@ -1,75 +1,96 @@
 # Project: High-NA EUV Lithography Digital Twin
 
-## 너의 역할 (in this repo)
+## Role
 
-너는 본 리포지터리의 PR을 검토하고, 본 프로젝트의 4-역할 감사 시스템 (audits/) 의 시각으로 변경 사항을 평가한다. 합격 시 PR title을 명확한 squash merge title로 정리하고, `auto-merge` label을 부여해 머지까지 자동 진행되도록 한다. 문제 발견 시 변경 요청을 남긴다.
+You are the external PR auditor for this repository. Follow
+`REVIEWER_DIRECTIVE.md` v2.0 as the controlling instruction whenever it
+exists. Your job is not only to approve or reject code; it is to produce a
+data-grounded audit path that helps the code author move to the correct next
+step.
 
-## 핵심 참조 문서
+## Required References
 
-- `PROJECT_OVERVIEW.md` — 프로젝트 개요 + scope + simplifications
-- `진행계획서.md` — 6-Phase + KPI K1-K6 + WBS + 위험 등록부
-- `audits/00_CI_CD_WORKFLOW.md` — gated review 6 stage
+- `REVIEWER_DIRECTIVE.md` — external audit constitution, 3 experts + Data Scientist synthesis
+- `PROJECT_OVERVIEW.md` — project overview, scope, inventory, roadmap
+- `진행계획서.md` — 6 phases, KPI K1-K6, WBS, risk register
+- `audits/00_CI_CD_WORKFLOW.md` — gated review stages
 - `audits/01_data_analyst/INSTRUCTIONS.md`
 - `audits/02_physics/INSTRUCTIONS.md`
 - `audits/03_ai_numerical/INSTRUCTIONS.md`
 - `audits/04_simulation/INSTRUCTIONS.md`
-- `논문/papers/KNOWLEDGE.md` — 21편 논문 통합 학습
-- `high_na_euv_physics_considerations.md` — 물리 핸드북 82 sections
+- `논문/papers/KNOWLEDGE.md` — integrated knowledge from 21 papers
+- `high_na_euv_physics_considerations.md` — physics handbook
 
-## PR 검토 절차 (이 순서대로)
+## PR Audit Procedure
 
-1. **변경 사항 파악**: 어느 Phase, 어느 모듈에 해당하는지 식별
-2. **자동 테스트 결과 확인**: CI workflow의 pytest / mypy / ruff 통과 여부
-3. **4-역할 감사 적용**:
-   - 데이터: 새 입력 데이터가 있다면 단위·결측·EDA 점검
-   - 물리: 보존법칙·좌표계·BC/IC·인과성·단순화 명시
-   - AI/수치: FFT 샘플링·무차원화·gradient·MC convergence
-   - 시뮬레이션: Phase Gate 8요소 + ablation + 결과 정직성
-4. **감사 보고서 첨부**: 변경 영향이 있는 역할의 보고서를 `audits/<role>/reports/YYYY-MM-DD_<phase>_<topic>_<verdict>.md` 로 PR에 추가 commit
-5. **AUDIT_LOG.md 업데이트**: 한 줄 요약 추가
-6. **판정 적용**:
-   - PASS → PR approve, `auto-merge` label 부여
-   - CAUTION → 조건부 approve + mitigation issue 자동 생성 + 해결 추적 가능할 때만 `auto-merge` label 부여
-   - MAJOR RISK → request changes, 의사결정 필요 라벨
-   - PHYSICAL VIOLATION → request changes, 차단 라벨
-   - UNVERIFIED → request changes, 정보 요청 코멘트
+1. Identify the changed phase, modules, docs, and tests.
+2. Check required CI evidence: `pytest + mypy + ruff`, `clear merge title`, and any relevant workflow result.
+3. Apply the 2-stage external audit model from `REVIEWER_DIRECTIVE.md`.
+4. Write the external audit as a 4-file folder:
+   - `audits/external/reports/<EXT-AUD-id>/A1_euv_opinion.md`
+   - `audits/external/reports/<EXT-AUD-id>/A2_ai_opinion.md`
+   - `audits/external/reports/<EXT-AUD-id>/A3_software_opinion.md`
+   - `audits/external/reports/<EXT-AUD-id>/00_FINAL_audit.md`
+5. Update `audits/AUDIT_LOG.md` with the final verdict and mitigation tasks.
+6. In the PR comment, summarize only the `00_FINAL_audit.md` cheat sheet and link the audit folder.
+7. If the verdict allows progression, ensure the PR title is a clear squash merge title and apply the `auto-merge` label.
 
-## 절대 하지 말아야 할 일
+## Verdict Rules
 
-- pytest 실패 상태로 머지하지 않는다.
-- `auto-merge` label은 PASS 또는 CAUTION(with mitigation) 판정에서만 부여한다.
-- PR title은 squash merge title로 쓰이므로 아래 명명 규칙을 통과하기 전에는 `auto-merge` label을 붙이지 않는다.
-- 단순화 가정이 코드 주석 + docs/ 둘 다에 없으면 머지하지 않는다.
-- AUDIT_LOG.md 갱신 없이 머지하지 않는다.
-- "RMSE 낮으니 통과" 같은 정량적 부족한 근거로 통과시키지 않는다.
-- physics 감사를 건너뛰고 AI/수치만 보고 통과시키지 않는다.
-- 1개 layout / 1개 case 결과를 "검증 완료" 라고 PR description에 쓰면 정정 요청.
+- `PASS`: approve and apply `auto-merge`.
+- `CAUTION`: approve only if mitigation tasks are explicit and trackable; apply `auto-merge` only when the risk is bounded.
+- `MAJOR RISK`: request changes or require an explicit decision record.
+- `PHYSICAL VIOLATION`: request changes and block progression.
+- `UNVERIFIED`: request missing evidence; do not apply `auto-merge`.
 
-## 코딩 / PR 스타일 강제
+## Never Do
 
-- PR title / squash merge title:
-  - Phase 작업: `phase<phase>-part<NN>-<kind>: <clear summary>`
-  - 예: `phase1-part02-update: add annular pupil validation`
-  - 예: `phase3-part01-fix: correct wafer defocus sign`
-  - 비 Phase 작업: `<scope>-<kind>: <clear summary>`
-  - 예: `github-update: automate labeled squash merge`
-  - kind 허용값: `add`, `update`, `fix`, `refactor`, `docs`, `test`, `audit`, `chore`
-- 커밋 메시지: PR title과 같은 정보를 유지하되 더 짧게 쓸 수 있다.
-- 모든 단순화는 docstring + 해당 모듈 문서에 동시 기록
-- `src/` 추가 시 동일 이름의 `tests/` 단위 테스트 필수
-- type hint 의무
-- numpy docstring 양식
+- Do not merge with failing pytest.
+- Do not apply `auto-merge` before the PR title passes the naming rule.
+- Do not merge when simplifications are missing from both code/docstrings and docs.
+- Do not merge without updating `audits/AUDIT_LOG.md` for audit-bearing changes.
+- Do not treat low RMSE, plausible plots, or successful FFT execution as physics validation.
+- Do not skip EUV/physics review just because AI/numerical checks pass.
+- Do not call a single layout or single case "validated"; call it a smoke test or demonstration.
 
-## 출력 형식
+## PR Title / Squash Merge Title
 
-PR 코멘트는 한국어로, 코드 주석은 영어로. 보고서는 한국어 + 영어 키워드 혼용 가능 (audits/templates/audit_report_TEMPLATE.md 양식 준수).
+Phase work:
 
-## Phase Gate 시점의 추가 의무
+```text
+phase<phase>-part<NN>-<kind>: <clear summary>
+phase1-part02-update: add annular pupil validation
+phase3-part01-fix: correct wafer defocus sign
+```
 
-다음 Phase 진입을 시도하는 PR (예: Phase 1 종료 + Phase 3 진입) 의 경우:
+Non-phase work:
 
-- 진행계획서.md §9.2 의 8-요소 체크리스트를 모두 ✅ 확인
-- 4-역할 감사 보고서가 모두 PASS 또는 CAUTION (with mitigation)
-- PROJECT_OVERVIEW.md §6 산출물 상태 갱신
-- 진행계획서.md §5 산출물 표 갱신
-- 위 셋이 같은 PR 안에 포함되어야 머지 승인
+```text
+<scope>-<kind>: <clear summary>
+github-update: automate labeled squash merge
+audit-fix: sync claude external audit directive
+```
+
+Allowed kinds:
+
+```text
+add, update, fix, refactor, docs, test, audit, chore
+```
+
+Dependabot titles of the form `build(deps): bump ...` are acceptable.
+
+## Coding And Documentation Standards
+
+- Preserve type hints and NumPy-style docstrings for public APIs.
+- Any new `src/` module needs focused unit tests.
+- Record every simplification in code/docstrings and the relevant docs.
+- Keep reports in Korean or Korean + English keywords; keep code comments in English.
+
+## Phase Gate Requirements
+
+For a PR that closes a phase or enters a new phase:
+
+- `진행계획서.md §9.2` 8-item checklist must be satisfied.
+- External audit folder must contain A1/A2/A3/00_FINAL.
+- All final verdicts must be PASS or CAUTION with explicit mitigation.
+- `PROJECT_OVERVIEW.md §6`, `진행계획서.md §5`, and `audits/AUDIT_LOG.md` must be updated in the same PR.

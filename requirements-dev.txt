@@ -4,4 +4,5 @@ matplotlib
 pytest
 pytest-cov
 mypy
+pre-commit
 ruff

@@ -29,6 +29,11 @@ High-NA EUV Lithography Digital Twin/
 │
 ├── PROJECT_OVERVIEW.md              ← 본 문서 (진입점)
 │
+├── REVIEWER_DIRECTIVE.md            ← Claude 외부 감사자 지침 (v2.0)
+│     • 3 전문가 (EUV/AI/Software) 병렬 + Data Scientist 통합자
+│     • 2-stage 외부 감사 → 4-md 폴더 산출 (A1+A2+A3+00_FINAL)
+│     • 코드 작성자가 올바르게 진행하도록 데이터 기반 최적화 권고
+│
 ├── high_na_euv_physics_considerations.md
 │     • 82개 섹션, ~31KB. 시뮬레이터 구현 관점의 물리 수식·모델·구현 우선순위.
 │     • Part A–W로 구성: Maxwell → 회절 → NA → 기하광학 → Fourier → coherence
@@ -51,15 +56,17 @@ High-NA EUV Lithography Digital Twin/
 │         §9 결론
 │     • 학문적 배경 / 발표·문서화에 사용. 시뮬레이터 코딩에서는 보조.
 │
-├── audits/                          ← 감사 시스템 (gated review)
-│     • 9개 .md, 4개 역할별 INSTRUCTIONS + CI/CD 워크플로 + 템플릿
-│     • README.md (시스템 개요)
-│     • 00_CI_CD_WORKFLOW.md (gated review 6 단계)
-│     • AUDIT_LOG.md (감사 이력 추적)
-│     • 01_data_analyst/INSTRUCTIONS.md (데이터 입력·전처리·EDA)
-│     • 02_physics/INSTRUCTIONS.md (물리 검증자, 10원칙·6 smoke test)
-│     • 03_ai_numerical/INSTRUCTIONS.md (FFT·sampling·gradient·MC)
-│     • 04_simulation/INSTRUCTIONS.md (Phase Gate 8요소 + ablation)
+├── audits/                          ← 감사 시스템 (gated review, 2-layer)
+│     • Layer 1 — 4-역할 self-audit (코드 작성자용)
+│       - 01_data_analyst/INSTRUCTIONS.md (데이터 입력·전처리·EDA)
+│       - 02_physics/INSTRUCTIONS.md (물리 검증자, 10원칙·6 smoke test)
+│       - 03_ai_numerical/INSTRUCTIONS.md (FFT·sampling·gradient·MC)
+│       - 04_simulation/INSTRUCTIONS.md (Phase Gate 8요소 + ablation)
+│     • Layer 2 — external/ 외부 감사 (Claude, REVIEWER_DIRECTIVE v2.0)
+│       - reports/EXT-AUD-<id>/ 폴더 단위, 4-md 산출 (A1/A2/A3/00_FINAL)
+│       - 첫 사례: EXT-AUD-2026-04-26-001 Phase 1 Initial Review (PASS w/ 1 P0)
+│     • README.md (시스템 개요), 00_CI_CD_WORKFLOW.md (gated review 6 단계)
+│     • AUDIT_LOG.md (감사 이력 + 미해결 mitigation task 추적)
 │     • templates/ (audit_report, change_request)
 │
 ├── .github/                          ← GitHub Actions + PR 자동화
@@ -222,13 +229,16 @@ resist: threshold
 
 - ⏳ `논문/papers/pdfs/` — Open Access 11편 다운로드 (사용자 수동, 외부 네트워크 필요)
 - ✅ `src/` (Phase 1) — `constants.py`, `pupil.py`, `mask.py`, `aerial.py`
+- ✅ `src/optics/zernike.py` — Zernike wavefront helper 공용화
 - ⏳ `src/` (Phase 2–6) — `illuminator.py`, `wafer_topo.py`, `mask_3d.py`, `resist_*.py`, `smo.py`, `pmwo.py`, `metrics.py`
 - ✅ `tests/phase1_aerial_image.py` — 5 unit tests, all PASS
+- ✅ `tests/audits/test_fft_invariants.py` — Parseval / fftshift / NA scaling / grid refinement invariant tests
 - ⏳ `tests/` (Phase 2–6) — 각 Phase 단위 테스트
 - ✅ `notebooks/0_first_aerial_image.ipynb` — Phase 1 데모
 - ⏳ `notebooks/` (Phase 2–6) — 후속 데모
 - ⏳ `data/absorber_nk/` — absorber n,k 데이터 (paper 7, 17 후보 재료)
 - ✅ `docs/phase1_design.md` — Phase 1 설계 결정 + 단순화 명시
+- ✅ `.pre-commit-config.yaml` — ruff + basic file hygiene hooks
 - ✅ `.github/` + `scripts/configure_github_automerge.sh` — CI, Claude review, title-gated auto-merge 셋업
 - ⏳ `docs/` (Phase 2–6, API) — 후속 문서
 

@@ -22,15 +22,11 @@ Reference
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from math import factorial
-from typing import Mapping
 
 import numpy as np
 
 from . import constants as C
-
-
-ZernikeCoeffs = Mapping[tuple[int, int], float]
+from .optics import ZernikeCoeffs, wavefront
 
 
 @dataclass(frozen=True)
@@ -61,52 +57,6 @@ def _frequency_grid(grid_size: int) -> tuple[np.ndarray, np.ndarray]:
     return fx, fy
 
 
-def _zernike_polynomial(n: int, m: int, rho: np.ndarray, theta: np.ndarray) -> np.ndarray:
-    """Compute a single Noll-style Zernike polynomial Z_n^m on (rho, theta).
-
-    Uses the standard normalization with R_n^|m|(rho) radial polynomials.
-    Returns 0 outside rho > 1.
-    """
-    abs_m = abs(m)
-    if (n - abs_m) % 2 != 0 or n < abs_m:
-        raise ValueError(f"invalid Zernike index n={n}, m={m}")
-
-    radial = np.zeros_like(rho)
-    for k in range((n - abs_m) // 2 + 1):
-        coeff = (-1) ** k
-        coeff *= factorial(n - k)
-        coeff /= (
-            factorial(k)
-            * factorial((n + abs_m) // 2 - k)
-            * factorial((n - abs_m) // 2 - k)
-        )
-        radial += coeff * rho ** (n - 2 * k)
-
-    if m > 0:
-        z = radial * np.cos(m * theta)
-    elif m < 0:
-        z = radial * np.sin(abs_m * theta)
-    else:
-        z = radial
-
-    z[rho > 1.0] = 0.0
-    return z
-
-
-def _wavefront(
-    rho: np.ndarray,
-    theta: np.ndarray,
-    zernike: ZernikeCoeffs,
-) -> np.ndarray:
-    """Sum Zernike contributions into the OPD wavefront W (in waves)."""
-    if not zernike:
-        return np.zeros_like(rho)
-    w = np.zeros_like(rho)
-    for (n, m), coeff in zernike.items():
-        w += coeff * _zernike_polynomial(n, m, rho, theta)
-    return w
-
-
 def build_pupil(spec: PupilSpec) -> np.ndarray:
     """Construct the complex pupil function P(f_x, f_y).
 
@@ -128,7 +78,7 @@ def build_pupil(spec: PupilSpec) -> np.ndarray:
     amplitude = annulus.astype(np.float64)
 
     if spec.zernike:
-        w_waves = _wavefront(rho, theta, spec.zernike)
+        w_waves = wavefront(rho, theta, spec.zernike)
         phase = np.exp(1j * 2.0 * np.pi * w_waves)
     else:
         phase = np.ones_like(amplitude, dtype=np.complex128)
