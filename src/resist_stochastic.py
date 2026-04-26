@@ -79,6 +79,27 @@ class MonteCarloConvergenceResult:
     converged: bool
 
 
+@dataclass(frozen=True)
+class CalibratedStochasticLWRPoint:
+    """One measured-vs-calibrated stochastic LWR budget point."""
+
+    dose: float
+    cd_m: float
+    measured_lwr_m: float
+    calibrated_lwr_m: float
+    residual_m: float
+
+
+@dataclass(frozen=True)
+class StochasticLWRCalibration:
+    """Grid-fit calibration for optical/material stochastic LWR coefficients."""
+
+    params: StochasticResistParams
+    rms_error_m: float
+    max_abs_error_m: float
+    points: tuple[CalibratedStochasticLWRPoint, ...]
+
+
 def stochastic_resist(
     aerial: np.ndarray,
     *,
@@ -251,6 +272,101 @@ def monte_carlo_convergence_gate(
     )
 
 
+def calibrate_stochastic_lwr_budget(
+    doses: Iterable[float],
+    cd_values_m: Iterable[float],
+    measured_lwr_m: Iterable[float],
+    *,
+    params: StochasticResistParams | None = None,
+    optical_coeff_grid_m: Iterable[float] | None = None,
+    material_coeff_grid_m: Iterable[float] | None = None,
+) -> StochasticLWRCalibration:
+    """Fit optical/material LWR coefficients to measured LWR data."""
+    if params is None:
+        params = StochasticResistParams()
+    _validate_params(params)
+
+    dose_values = _as_positive_vector(doses, "doses")
+    cd_values = _as_positive_vector(cd_values_m, "cd_values_m")
+    measured = _as_nonnegative_vector(measured_lwr_m, "measured_lwr_m")
+    if not (dose_values.size == cd_values.size == measured.size):
+        raise ValueError("doses, cd_values_m, and measured_lwr_m must match length")
+
+    optical_grid = _coefficient_grid(
+        optical_coeff_grid_m,
+        center=params.optical_lwr_coeff_m,
+        name="optical_coeff_grid_m",
+    )
+    material_grid = _coefficient_grid(
+        material_coeff_grid_m,
+        center=params.material_lwr_coeff_m,
+        name="material_coeff_grid_m",
+    )
+
+    best_params = params
+    best_predicted: np.ndarray | None = None
+    best_error = float("inf")
+    for optical_coeff_m in optical_grid:
+        for material_coeff_m in material_grid:
+            candidate = StochasticResistParams(
+                photon_density_per_unit=params.photon_density_per_unit,
+                secondary_electron_yield=params.secondary_electron_yield,
+                acid_yield=params.acid_yield,
+                deprotection_gain=params.deprotection_gain,
+                clearing_threshold=params.clearing_threshold,
+                material_threshold_sigma=params.material_threshold_sigma,
+                optical_lwr_coeff_m=float(optical_coeff_m),
+                material_lwr_coeff_m=float(material_coeff_m),
+                cross_compensation=params.cross_compensation,
+                reference_cd_m=params.reference_cd_m,
+            )
+            predicted = np.array(
+                [
+                    lwr_decomposition_budget(
+                        dose,
+                        cd_m=cd_m,
+                        params=candidate,
+                    ).total_lwr_m
+                    for dose, cd_m in zip(dose_values, cd_values, strict=True)
+                ],
+                dtype=np.float64,
+            )
+            error = float(np.mean((predicted - measured) ** 2))
+            if error < best_error:
+                best_error = error
+                best_params = candidate
+                best_predicted = predicted
+
+    if best_predicted is None:
+        raise RuntimeError("stochastic LWR calibration produced no candidates")
+
+    residuals = best_predicted - measured
+    points = tuple(
+        CalibratedStochasticLWRPoint(
+            dose=float(dose),
+            cd_m=float(cd_m),
+            measured_lwr_m=float(target),
+            calibrated_lwr_m=float(predicted),
+            residual_m=float(residual),
+        )
+        for dose, cd_m, target, predicted, residual in zip(
+            dose_values,
+            cd_values,
+            measured,
+            best_predicted,
+            residuals,
+            strict=True,
+        )
+    )
+
+    return StochasticLWRCalibration(
+        params=best_params,
+        rms_error_m=float(np.sqrt(np.mean(residuals**2))),
+        max_abs_error_m=float(np.max(np.abs(residuals))),
+        points=points,
+    )
+
+
 def lwr_decomposition_budget(
     dose: float,
     *,
@@ -379,6 +495,37 @@ def _validate_convergence_inputs(
     if counts[-1] < min_trials:
         raise ValueError("final trial count must be at least min_trials")
     return counts
+
+
+def _as_positive_vector(values: Iterable[float], name: str) -> np.ndarray:
+    vector = np.array(tuple(float(value) for value in values), dtype=np.float64)
+    if vector.size == 0:
+        raise ValueError(f"{name} must contain at least one value")
+    if not np.all(np.isfinite(vector)) or np.any(vector <= 0.0):
+        raise ValueError(f"{name} must contain positive finite values")
+    return vector
+
+
+def _as_nonnegative_vector(values: Iterable[float], name: str) -> np.ndarray:
+    vector = np.array(tuple(float(value) for value in values), dtype=np.float64)
+    if vector.size == 0:
+        raise ValueError(f"{name} must contain at least one value")
+    if not np.all(np.isfinite(vector)) or np.any(vector < 0.0):
+        raise ValueError(f"{name} must contain non-negative finite values")
+    return vector
+
+
+def _coefficient_grid(
+    values_m: Iterable[float] | None,
+    *,
+    center: float,
+    name: str,
+) -> np.ndarray:
+    if values_m is None:
+        grid = center * np.linspace(0.25, 2.5, 46, dtype=np.float64)
+    else:
+        grid = _as_positive_vector(values_m, name)
+    return grid.astype(np.float64)
 
 
 def _validate_positive_finite(value: float, name: str) -> None:

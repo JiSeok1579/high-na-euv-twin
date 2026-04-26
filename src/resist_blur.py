@@ -24,6 +24,28 @@ class BlurDoseSweepPoint:
     lwr_proxy_m: float
 
 
+@dataclass(frozen=True)
+class CalibratedLWRPoint:
+    """One measured-vs-calibrated LWR proxy point."""
+
+    sigma_m: float
+    dose: float
+    lwr_proxy_m: float
+    measured_lwr_m: float
+    calibrated_lwr_m: float
+    residual_m: float
+
+
+@dataclass(frozen=True)
+class BlurLWRCalibration:
+    """Scale calibration from Level 1 LWR proxy to measured LWR."""
+
+    scale: float
+    rms_error_m: float
+    max_abs_error_m: float
+    points: tuple[CalibratedLWRPoint, ...]
+
+
 def gaussian_kernel_1d(
     sigma_m: float,
     pixel_size_m: float,
@@ -144,6 +166,56 @@ def blur_dose_sweep(
                 )
             )
     return tuple(points)
+
+
+def calibrate_blur_lwr_proxy(
+    sweep_points: Iterable[BlurDoseSweepPoint],
+    measured_lwr_m: Iterable[float],
+) -> BlurLWRCalibration:
+    """Fit a scalar calibration from deterministic LWR proxy to measured LWR."""
+    points = tuple(sweep_points)
+    measured = np.array(tuple(float(value) for value in measured_lwr_m), dtype=np.float64)
+    if not points:
+        raise ValueError("sweep_points must contain at least one point")
+    if measured.size != len(points):
+        raise ValueError("measured_lwr_m must match sweep_points length")
+    if not np.all(np.isfinite(measured)) or np.any(measured < 0.0):
+        raise ValueError("measured_lwr_m must contain non-negative finite values")
+
+    proxy = np.array([point.lwr_proxy_m for point in points], dtype=np.float64)
+    if not np.all(np.isfinite(proxy)) or np.any(proxy < 0.0):
+        raise ValueError("sweep point LWR proxies must be non-negative finite values")
+    denominator = float(np.dot(proxy, proxy))
+    if denominator <= 0.0:
+        raise ValueError("at least one sweep point must have positive LWR proxy")
+
+    scale = float(np.dot(proxy, measured) / denominator)
+    calibrated = scale * proxy
+    residuals = calibrated - measured
+    calibrated_points = tuple(
+        CalibratedLWRPoint(
+            sigma_m=point.sigma_m,
+            dose=point.dose,
+            lwr_proxy_m=point.lwr_proxy_m,
+            measured_lwr_m=float(target),
+            calibrated_lwr_m=float(predicted),
+            residual_m=float(residual),
+        )
+        for point, target, predicted, residual in zip(
+            points,
+            measured,
+            calibrated,
+            residuals,
+            strict=True,
+        )
+    )
+
+    return BlurLWRCalibration(
+        scale=scale,
+        rms_error_m=float(np.sqrt(np.mean(residuals**2))),
+        max_abs_error_m=float(np.max(np.abs(residuals))),
+        points=calibrated_points,
+    )
 
 
 def transition_width(

@@ -7,6 +7,7 @@ import pytest
 
 from src.resist_stochastic import (
     StochasticResistParams,
+    calibrate_stochastic_lwr_budget,
     lwr_decomposition_budget,
     monte_carlo_convergence_gate,
     monte_carlo_lwr_curve,
@@ -149,6 +150,34 @@ def test_lwr_budget_reproduces_optical_material_smile_shape():
     assert nominal.total_lwr_m < high.total_lwr_m
 
 
+def test_calibrate_stochastic_lwr_budget_recovers_reference_coefficients():
+    """Level 3 calibration fits optical/material LWR coefficients to data."""
+    true_params = StochasticResistParams(
+        optical_lwr_coeff_m=2.0e-9,
+        material_lwr_coeff_m=4.0e-9,
+        cross_compensation=0.2,
+    )
+    doses = [0.5, 1.0, 2.0]
+    cds = [36e-9, 36e-9, 36e-9]
+    measured = [
+        lwr_decomposition_budget(dose, cd_m=cd_m, params=true_params).total_lwr_m
+        for dose, cd_m in zip(doses, cds, strict=True)
+    ]
+
+    calibration = calibrate_stochastic_lwr_budget(
+        doses,
+        cds,
+        measured,
+        params=StochasticResistParams(cross_compensation=0.2),
+        optical_coeff_grid_m=[2.0e-9, 3.0e-9],
+        material_coeff_grid_m=[3.0e-9, 4.0e-9],
+    )
+
+    assert calibration.params.optical_lwr_coeff_m == pytest.approx(2.0e-9)
+    assert calibration.params.material_lwr_coeff_m == pytest.approx(4.0e-9)
+    assert calibration.rms_error_m == pytest.approx(0.0, abs=1e-18)
+
+
 def test_stochastic_lwr_uses_three_sigma_sample_width():
     """The exported helper should match the explicit 3-sigma convention."""
     samples = [20e-9, 21e-9, 19e-9, 22e-9]
@@ -195,6 +224,12 @@ def test_monte_carlo_convergence_gate_rejects_invalid_gate_inputs():
             np.ones(8),
             1e-9,
             tolerance_fraction=-0.1,
+        )
+    with pytest.raises(ValueError, match="must match length"):
+        calibrate_stochastic_lwr_budget(
+            [1.0],
+            [36e-9, 40e-9],
+            [4e-9],
         )
 
 

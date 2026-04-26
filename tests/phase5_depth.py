@@ -10,6 +10,7 @@ from src.dof import focus_drilling_average
 from src.mask import MaskGrid, kirchhoff_mask, line_space_pattern
 from src.pupil import PupilSpec
 from src.resist_depth import (
+    calibrate_sidewall_angle_proxy,
     depth_cd_profile,
     depth_attenuation_factors,
     depth_defocus_values,
@@ -185,6 +186,25 @@ def test_sidewall_angle_proxy_detects_tapered_profile():
     assert estimate.sidewall_angle_deg < 90.0
 
 
+def test_calibrate_sidewall_angle_proxy_fits_affine_swa_measurements():
+    """Level 2 calibration maps SWA proxy values to measured SWA values."""
+    proxies = [
+        sidewall_angle_proxy(
+            _line_stack(widths_px=widths),
+            [0.0, 50e-9, 100e-9],
+            1e-9,
+        )
+        for widths in ([24, 24, 24], [20, 30, 40], [20, 40, 60])
+    ]
+    measured = [0.8 * proxy.sidewall_angle_deg + 10.0 for proxy in proxies]
+
+    calibration = calibrate_sidewall_angle_proxy(proxies, measured)
+
+    assert calibration.slope == pytest.approx(0.8)
+    assert calibration.intercept_deg == pytest.approx(10.0)
+    assert calibration.rms_error_deg == pytest.approx(0.0, abs=1e-12)
+
+
 def test_depth_profile_rejects_bad_stack_shape():
     """Profile extraction should fail early on inconsistent stack metadata."""
     with pytest.raises(ValueError, match="depth axis"):
@@ -199,6 +219,17 @@ def test_depth_profile_rejects_bad_stack_shape():
             [0.0, 50e-9],
             pixel_size_m=1e-9,
             line_index=99,
+        )
+    with pytest.raises(ValueError, match="measured_sidewall_angle_deg"):
+        calibrate_sidewall_angle_proxy(
+            [
+                sidewall_angle_proxy(
+                    _line_stack(widths_px=[20, 30]),
+                    [0.0, 50e-9],
+                    1e-9,
+                )
+            ],
+            [95.0],
         )
 
 

@@ -8,6 +8,7 @@ import pytest
 from src.resist_blur import (
     blurred_threshold_resist,
     blur_dose_sweep,
+    calibrate_blur_lwr_proxy,
     gaussian_blur,
     gaussian_kernel_1d,
     transition_width,
@@ -127,6 +128,29 @@ def test_blur_sweep_lwr_proxy_decreases_with_dose():
     assert points[1].lwr_proxy_m == pytest.approx(0.5 * points[0].lwr_proxy_m)
 
 
+def test_calibrate_blur_lwr_proxy_fits_measured_scale():
+    """Level 1 calibration maps deterministic proxy values to measured LWR."""
+    target = _two_line_target()
+    points = blur_dose_sweep(
+        target.astype(float),
+        target,
+        pixel_size_m=1e-9,
+        sigma_values_m=[2e-9, 4e-9],
+        doses=[1.0, 4.0],
+        threshold=0.5,
+    )
+    measured = [1.5 * point.lwr_proxy_m for point in points]
+
+    calibration = calibrate_blur_lwr_proxy(points, measured)
+
+    assert calibration.scale == pytest.approx(1.5)
+    assert calibration.rms_error_m == pytest.approx(0.0, abs=1e-18)
+    assert all(
+        point.residual_m == pytest.approx(0.0, abs=1e-18)
+        for point in calibration.points
+    )
+
+
 def test_blur_sweep_rejects_bad_target_shape():
     """Sweep inputs must preserve one target pixel per aerial sample."""
     with pytest.raises(ValueError, match="target_line"):
@@ -137,6 +161,8 @@ def test_blur_sweep_rejects_bad_target_shape():
             sigma_values_m=[2e-9],
             doses=[1.0],
         )
+    with pytest.raises(ValueError, match="sweep_points"):
+        calibrate_blur_lwr_proxy((), [])
 
 
 def _two_line_target() -> np.ndarray:

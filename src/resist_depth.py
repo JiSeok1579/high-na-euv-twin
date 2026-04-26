@@ -47,6 +47,27 @@ class SidewallAngleProxy:
 
 
 @dataclass(frozen=True)
+class CalibratedSWAPoint:
+    """One measured-vs-calibrated sidewall-angle proxy point."""
+
+    proxy_sidewall_angle_deg: float
+    measured_sidewall_angle_deg: float
+    calibrated_sidewall_angle_deg: float
+    residual_deg: float
+
+
+@dataclass(frozen=True)
+class SWACalibration:
+    """Affine calibration from deterministic SWA proxy to measured SWA."""
+
+    slope: float
+    intercept_deg: float
+    rms_error_deg: float
+    max_abs_error_deg: float
+    points: tuple[CalibratedSWAPoint, ...]
+
+
+@dataclass(frozen=True)
 class DepthResolvedResist:
     """Depth-resolved aerial, dose, and exposure stack."""
 
@@ -245,6 +266,64 @@ def sidewall_angle_proxy(
         thickness_m=float(thickness_m),
         edge_tilt_m_per_m=float(edge_tilt_m_per_m),
         sidewall_angle_deg=sidewall_angle_deg,
+    )
+
+
+def calibrate_sidewall_angle_proxy(
+    proxies: Iterable[SidewallAngleProxy],
+    measured_sidewall_angle_deg: Iterable[float],
+) -> SWACalibration:
+    """Fit an affine calibration from SWA proxy values to measured SWA."""
+    proxy_values = np.array(
+        [proxy.sidewall_angle_deg for proxy in proxies],
+        dtype=np.float64,
+    )
+    measured = np.array(
+        tuple(float(value) for value in measured_sidewall_angle_deg),
+        dtype=np.float64,
+    )
+    if proxy_values.size == 0:
+        raise ValueError("proxies must contain at least one SidewallAngleProxy")
+    if measured.size != proxy_values.size:
+        raise ValueError("measured_sidewall_angle_deg must match proxies length")
+    if not np.all(np.isfinite(proxy_values)) or not np.all(np.isfinite(measured)):
+        raise ValueError("SWA calibration values must be finite")
+    if np.any((measured <= 0.0) | (measured > 90.0)):
+        raise ValueError("measured_sidewall_angle_deg must be in (0, 90]")
+
+    if proxy_values.size == 1:
+        slope = 1.0
+        intercept = float(measured[0] - proxy_values[0])
+    else:
+        design = np.column_stack((proxy_values, np.ones(proxy_values.size)))
+        slope, intercept = np.linalg.lstsq(design, measured, rcond=None)[0]
+        slope = float(slope)
+        intercept = float(intercept)
+
+    calibrated = slope * proxy_values + intercept
+    residuals = calibrated - measured
+    points = tuple(
+        CalibratedSWAPoint(
+            proxy_sidewall_angle_deg=float(proxy_angle),
+            measured_sidewall_angle_deg=float(target),
+            calibrated_sidewall_angle_deg=float(predicted),
+            residual_deg=float(residual),
+        )
+        for proxy_angle, target, predicted, residual in zip(
+            proxy_values,
+            measured,
+            calibrated,
+            residuals,
+            strict=True,
+        )
+    )
+
+    return SWACalibration(
+        slope=slope,
+        intercept_deg=intercept,
+        rms_error_deg=float(np.sqrt(np.mean(residuals**2))),
+        max_abs_error_deg=float(np.max(np.abs(residuals))),
+        points=points,
     )
 
 

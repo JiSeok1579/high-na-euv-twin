@@ -18,7 +18,8 @@ dose * I(x, y) > threshold
 Level 1 adds a Gaussian chemical blur approximation before thresholding.
 Level 2 adds depth-resolved dose attenuation, focus-depth coupling, and a
 deterministic profile/SWA proxy. Level 3 adds a reduced stochastic Monte Carlo
-chain and dose-dependent LWR budget.
+chain, dose-dependent LWR budget, and calibration hooks for measured LWR/SWA
+targets.
 
 ## 2. Implemented Functions
 
@@ -30,6 +31,7 @@ chain and dose-dependent LWR budget.
 | `gaussian_blur(...)` | Applies separable Gaussian blur to a 1-D line or 2-D aerial image. |
 | `blurred_threshold_resist(...)` | Applies Level 1 blur before threshold resist. |
 | `blur_dose_sweep(...)` | Evaluates CD, EPE, transition width, and deterministic LWR proxy over sigma-dose grids. |
+| `calibrate_blur_lwr_proxy(...)` | Fits Level 1 LWR proxy scale against measured LWR data. |
 | `transition_width(...)` | Measures deterministic edge-spread width between two normalized intensity levels. |
 | `depth_defocus_values(...)` | Maps top-to-bottom resist depths onto signed focus offsets. |
 | `depth_attenuation_factors(...)` | Computes Beer-Lambert top-to-bottom dose factors. |
@@ -38,10 +40,12 @@ chain and dose-dependent LWR budget.
 | `top_bottom_dose_asymmetry(...)` | Reports top-vs-bottom mean dose asymmetry. |
 | `depth_cd_profile(...)` | Extracts center-line CD and exposed fraction for each resist depth. |
 | `sidewall_angle_proxy(...)` | Converts through-resist CD taper into a deterministic SWA proxy. |
+| `calibrate_sidewall_angle_proxy(...)` | Fits an affine SWA proxy calibration against measured SWA data. |
 | `focus_depth_resolved_resist(...)` | Runs focus-coupled aerial slices and depth-resolved thresholding. |
 | `stochastic_resist(...)` | Runs one photon → secondary electron → acid → deprotection → dissolution trial. |
 | `monte_carlo_lwr_curve(...)` | Aggregates seeded stochastic CD/LWR/LCDU over a dose sweep. |
 | `monte_carlo_convergence_gate(...)` | Compares staged trial counts and gates 1000-trial LWR stability. |
+| `calibrate_stochastic_lwr_budget(...)` | Fits optical/material LWR coefficients against measured LWR data. |
 | `lwr_decomposition_budget(...)` | Reports optical/material/cross LWR variance terms. |
 | `stochastic_lwr_m(...)` | Converts Monte Carlo CD samples into a 3σ LWR estimate. |
 | `critical_dimension(...)` | Measures mean foreground run width on a 1-D printed line. |
@@ -73,6 +77,7 @@ The Phase 5 L1 tests cover:
 - sigma-dose sweep grid output
 - LWR proxy increasing with sigma at fixed dose
 - LWR proxy decreasing with dose at fixed sigma
+- Level 1 LWR proxy calibration against measured LWR inputs
 
 The Phase 5 L2 Part 01 tests cover:
 
@@ -90,6 +95,7 @@ The Phase 5 L2 Part 02 tests cover:
 - tapered through-resist CD mapping to non-zero edge tilt and lower SWA
 - profile metadata validation for stack/depth/line-index consistency
 - `focus_depth_resolved_resist(...)` output feeding the profile/SWA proxy path
+- affine SWA proxy calibration against measured SWA inputs
 
 The Phase 5 L3 Part 01 tests cover:
 
@@ -106,6 +112,12 @@ The Phase 5 L3 Part 02 tests cover:
 - the same seeded trace failing under an intentionally tight tolerance
 - convergence gate validation for trial count, minimum trial, and tolerance inputs
 
+The Phase 5 completion tests cover:
+
+- Level 1 LWR proxy scale calibration against measured LWR inputs
+- Level 2 affine SWA proxy calibration against measured SWA inputs
+- optical/material stochastic LWR budget calibration against measured LWR inputs
+
 Current targets:
 
 | Case | Target | Result |
@@ -120,16 +132,17 @@ Current targets:
 | L2 profile | depth exposure stack -> CD/SWA proxy | PASS |
 | L3 stochastic | seeded MC -> CD/LWR/LCDU + budget | PASS |
 | L3 convergence | 100/300/1000 trials -> LWR stability gate | PASS |
+| Phase 5 calibration | measured LWR/SWA inputs -> fitted proxy/budget coefficients | PASS |
 
 ## 4. Limitations
 
 | ID | Limitation | Deferred To |
 |----|------------|-------------|
-| P5-L1 | Gaussian blur is deterministic and isotropic; no separate acid/quencher diffusion chemistry. | Phase 5 L1 calibration |
-| P5-L5 | L1 sweep LWR proxy is deterministic; L3 MC LWR remains reduced and uncalibrated. | Phase 5 L3 calibration |
-| P5-L2 | SWA is a deterministic CD-taper proxy, not a calibrated dissolution/profile simulator. | Phase 5 L2 calibration |
-| P5-L3 | Stochastic chain is reduced and calibrated qualitatively, not first-principles molecular MC. | Phase 5 L3 calibration |
-| P5-L4 | Printed output is a boolean exposed map plus profile metrics, not a developed 3-D resist volume. | Phase 5 L2-L3 |
+| P5-L1 | Gaussian blur is deterministic and isotropic; no separate acid/quencher diffusion chemistry. | Future chemistry model |
+| P5-L5 | Calibration APIs accept measured inputs, but this repo has no bundled proprietary experimental dataset. | Future data import |
+| P5-L2 | SWA is a deterministic CD-taper proxy plus affine calibration, not a full dissolution/profile simulator. | Future dissolution model |
+| P5-L3 | Stochastic chain is reduced and calibrated by LWR targets, not first-principles molecular MC. | Future molecular MC |
+| P5-L4 | Printed output is a boolean exposed map plus profile metrics, not a developed 3-D resist volume. | Future dissolution model |
 
 ## 5. Exit Status
 
@@ -140,4 +153,6 @@ Part 02 adds a deterministic through-resist CD profile and SWA proxy; calibrated
 dissolution geometry remains a later target. Phase 5 L3 Part 01 adds seeded
 stochastic trials, CD/LWR/LCDU summaries, and a qualitative optical/material
 LWR budget. Phase 5 L3 Part 02 adds a 1000-trial convergence gate for stochastic
-LWR stability.
+LWR stability. Phase 5 completion adds measured-input calibration hooks for L1
+LWR, L2 SWA, and L3 stochastic LWR budgets. KPI K6 is complete for the reduced
+model level; external measured datasets remain a future validation input.
