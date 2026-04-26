@@ -19,6 +19,7 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-26 | Phase 5 | implementation | Phase 5 L2 Part 02 profile/SWA proxy | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | `depth_cd_profile`, `sidewall_angle_proxy` 추가. depth별 CD profile, top-bottom CD taper, vertical/tapered SWA proxy 검증. 52/52 tests PASS |
 | 2026-04-26 | Phase 5 | implementation | Phase 5 L2 Part 01 depth-resolved resist | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | `resist_depth.py`, `tests/phase5_depth.py` 추가. depth defocus, Beer-Lambert attenuation, top/bottom asymmetry, focus-drilling consistency 검증. 48/48 tests PASS |
 | 2026-04-26 | Phase 5 | implementation | Phase 5 L1 Part 02 blur sigma-dose sweep | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | `blur_dose_sweep` 추가. CD/EPE/transition width/LWR proxy table, sigma/dose 방향성 회귀, 4b notebook sweep 추가. 42/42 tests PASS |
 | 2026-04-26 | Phase 5 | implementation | Phase 5 L1 Part 01 Gaussian blur resist | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | `resist_blur.py`, `tests/phase5_blur.py`, `4b_resist_levels.ipynb` 추가. Gaussian blur kernel/edge-spread/end-to-end CD 검증. 38/38 tests PASS |
@@ -42,8 +43,8 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           17
-PASS:                15
+총 감사 수:           18
+PASS:                16
 PASS WITH P0:        2
 CAUTION:             0
 MAJOR RISK:          0
@@ -55,11 +56,11 @@ UNVERIFIED:          0
   P0 개수:             1 → 0 → 0 → 1 → 0 (MT-011 처리)
   P1 개수:             6 → 2 → 0 → 3 → 1 → 0 (MT-012 처리)
   Mitigation 처리율 (누적): — → 86% → 100% → 100% → 93% → 100% (14/14)
-  단위 테스트 수:       5 → 9 → 14 → 20 → 25 → 32 → 38 → 42 → 48 (+860% 누적) ★
-  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 → 25/25 → 32/32 → 38/38 → 42/42 → 48/48 (100% 유지)
+  단위 테스트 수:       5 → 9 → 14 → 20 → 25 → 32 → 38 → 42 → 48 → 52 (+940% 누적) ★
+  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 → 25/25 → 32/32 → 38/38 → 42/42 → 48/48 → 52/52 (100% 유지)
   KPI K3 (DOF 정량):   0% → 0% → enabled → 50% → 100% ★
   KPI K1 (end-to-end): optical only → full MVP ★
-  KPI 평균 진척률:      33% → 33% → 33%+ → 42% → 50% → 58% → 61% → 63% → 65%
+  KPI 평균 진척률:      33% → 33% → 33%+ → 42% → 50% → 58% → 61% → 63% → 65% → 67%
   누적 단순화:          7 → 7 → 11 → 13 (P3-L5/L6 신규)
   단순화 4중 기록률:    100% → 100% → 100% → 85% (drift 시작 — P3-L5/L6 명시 필요)
 
