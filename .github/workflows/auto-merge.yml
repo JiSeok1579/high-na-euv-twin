@@ -27,7 +27,7 @@ jobs:
     steps:
       - name: Enable auto-merge for labeled PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.AUTOMERGE_TOKEN || github.token }}
           AUTO_MERGE_LABEL: auto-merge
           PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
         run: |
