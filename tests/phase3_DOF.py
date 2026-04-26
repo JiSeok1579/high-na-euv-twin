@@ -7,12 +7,15 @@ import pytest
 
 from src import constants as C
 from src.aerial import aerial_image
+from src.dof import FocusSample, focus_stack_contrast, nominal_depth_of_focus
 from src.mask import MaskGrid, kirchhoff_mask, line_space_pattern
 from src.pupil import PupilSpec, build_pupil
 from src.wafer_topo import (
     defocus_phase_radians,
     defocus_pupil_phase,
     height_to_defocus_m,
+    max_defocus_phase_step_radians,
+    validate_defocus_sampling,
 )
 
 
@@ -28,6 +31,30 @@ def test_defocus_phase_sign_convention_is_fixed():
     assert plus[-1] == pytest.approx(expected_edge)
     assert plus[0] == pytest.approx(0.0)
     assert np.allclose(minus, -plus)
+
+
+def test_full_angular_defocus_matches_paraxial_small_angle_limit():
+    """The angular OPL option must reduce to the paraxial Phase 3 formula."""
+    rho = np.linspace(0.0, 1.0, 9)
+    dz = 20e-9
+    na = 0.10
+
+    paraxial = defocus_phase_radians(
+        rho,
+        dz,
+        na=na,
+        wavelength=C.LAMBDA_EUV,
+        approximation="paraxial",
+    )
+    angular = defocus_phase_radians(
+        rho,
+        dz,
+        na=na,
+        wavelength=C.LAMBDA_EUV,
+        approximation="angular",
+    )
+
+    assert np.allclose(angular, paraxial, rtol=3e-3, atol=1e-12)
 
 
 def test_height_to_defocus_uses_focus_plane_reference():
@@ -50,6 +77,13 @@ def test_defocus_pupil_phase_conjugates_for_opposite_signs():
     assert np.allclose(zero, np.ones_like(zero))
 
 
+def test_defocus_sampling_guard_rejects_under_sampled_phase():
+    """Large defocus on a tiny grid should be rejected before FFT use."""
+    assert max_defocus_phase_step_radians(256, 50e-9) < np.pi / 2.0
+    with pytest.raises(ValueError, match="defocus phase step"):
+        validate_defocus_sampling(8, 10e-6, max_phase_step_rad=np.pi / 2.0)
+
+
 def test_build_pupil_applies_expected_edge_phase():
     """PupilSpec.defocus_m is wired into the sampled pupil phase."""
     dz = 20e-9
@@ -68,6 +102,41 @@ def test_build_pupil_applies_expected_edge_phase():
 
     assert center == pytest.approx(1.0 + 0.0j)
     assert edge / abs(edge) == pytest.approx(expected_edge_phase)
+
+
+def test_nominal_dof_metric_interpolates_threshold_crossings():
+    """Synthetic stack verifies the nominal DOF interpolation independent of optics."""
+    samples = [
+        FocusSample(-80e-9, 0.70, 0.70),
+        FocusSample(-40e-9, 0.90, 0.90),
+        FocusSample(0.0, 1.00, 1.00),
+        FocusSample(40e-9, 0.90, 0.90),
+        FocusSample(80e-9, 0.70, 0.70),
+    ]
+    metrics = nominal_depth_of_focus(samples, threshold_fraction=0.8)
+
+    assert metrics.reference_defocus_m == pytest.approx(0.0)
+    assert metrics.lower_defocus_m == pytest.approx(-60e-9)
+    assert metrics.upper_defocus_m == pytest.approx(60e-9)
+    assert metrics.dof_m == pytest.approx(120e-9)
+
+
+def test_focus_stack_contrast_is_symmetric_for_opposite_defocus():
+    """A real coherent line-space stack should respect +/- defocus symmetry."""
+    grid = MaskGrid(nx=512, ny=64, pixel_size=1e-9)
+    mask = kirchhoff_mask(line_space_pattern(grid, pitch_m=30e-9))
+    samples = focus_stack_contrast(
+        mask,
+        grid,
+        [-80e-9, -40e-9, 0.0, 40e-9, 80e-9],
+        pupil_spec=PupilSpec(grid_size=512, na=C.NA_HIGH, obscuration_ratio=0.0),
+        anamorphic=False,
+    )
+    by_focus = {sample.defocus_m: sample.contrast for sample in samples}
+
+    assert by_focus[-80e-9] == pytest.approx(by_focus[80e-9])
+    assert by_focus[-40e-9] == pytest.approx(by_focus[40e-9])
+    assert by_focus[0.0] > 0.9
 
 
 def test_zero_defocus_preserves_phase1_aerial_image():

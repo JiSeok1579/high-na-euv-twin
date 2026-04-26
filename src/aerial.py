@@ -38,7 +38,11 @@ from . import constants as C
 from .mask import MaskGrid
 from .optics import wavefront
 from .pupil import PupilSpec
-from .wafer_topo import defocus_pupil_phase
+from .wafer_topo import (
+    DefocusApproximation,
+    defocus_pupil_phase,
+    validate_defocus_sampling,
+)
 
 
 @dataclass(frozen=True)
@@ -78,6 +82,7 @@ def _build_aerial_pupil(
     wavelength: float,
     zernike: dict | None,
     defocus_m: float,
+    defocus_approximation: DefocusApproximation,
 ) -> np.ndarray:
     """Sample the pupil so that pupil radius rho = 1 maps to the system NA.
 
@@ -99,12 +104,27 @@ def _build_aerial_pupil(
     outside_obs = rho >= obscuration_ratio
     amplitude = (inside & outside_obs).astype(np.float64)
 
+    if defocus_m != 0.0:
+        validate_defocus_sampling(
+            min(nx, ny),
+            defocus_m,
+            na=na,
+            wavelength=wavelength,
+            approximation=defocus_approximation,
+        )
+
     phase = np.ones_like(amplitude, dtype=np.complex128)
     if zernike:
         w_waves = wavefront(rho, theta, zernike)
         phase *= np.exp(1j * 2.0 * np.pi * w_waves)
     if defocus_m != 0.0:
-        phase *= defocus_pupil_phase(rho, defocus_m, na=na, wavelength=wavelength)
+        phase *= defocus_pupil_phase(
+            rho,
+            defocus_m,
+            na=na,
+            wavelength=wavelength,
+            approximation=defocus_approximation,
+        )
     return (amplitude * phase).astype(np.complex128)
 
 
@@ -163,6 +183,7 @@ def aerial_image(
         wavelength=pupil_spec.wavelength,
         zernike=dict(pupil_spec.zernike) if pupil_spec.zernike else None,
         defocus_m=pupil_spec.defocus_m,
+        defocus_approximation=pupil_spec.defocus_approximation,
     )
 
     spectrum = np.fft.fftshift(np.fft.fft2(mask_field))
