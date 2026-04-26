@@ -18,6 +18,8 @@ Coordinate convention
 - The pupil sampling is set so that the highest spatial frequency on the
   aerial-plane grid is 1 / (2 · pixel_size_wafer); we map normalized pupil
   rho = 1 to the system NA.
+- Constant defocus follows `wafer_topo.py`: positive defocus means wafer
+  above best focus and adds +π·z·NA²/λ·rho² to the pupil phase.
 
 References
 ----------
@@ -36,6 +38,7 @@ from . import constants as C
 from .mask import MaskGrid
 from .optics import wavefront
 from .pupil import PupilSpec
+from .wafer_topo import defocus_pupil_phase
 
 
 @dataclass(frozen=True)
@@ -74,6 +77,7 @@ def _build_aerial_pupil(
     obscuration_ratio: float,
     wavelength: float,
     zernike: dict | None,
+    defocus_m: float,
 ) -> np.ndarray:
     """Sample the pupil so that pupil radius rho = 1 maps to the system NA.
 
@@ -95,11 +99,12 @@ def _build_aerial_pupil(
     outside_obs = rho >= obscuration_ratio
     amplitude = (inside & outside_obs).astype(np.float64)
 
+    phase = np.ones_like(amplitude, dtype=np.complex128)
     if zernike:
         w_waves = wavefront(rho, theta, zernike)
-        phase = np.exp(1j * 2.0 * np.pi * w_waves)
-    else:
-        phase = np.ones_like(amplitude, dtype=np.complex128)
+        phase *= np.exp(1j * 2.0 * np.pi * w_waves)
+    if defocus_m != 0.0:
+        phase *= defocus_pupil_phase(rho, defocus_m, na=na, wavelength=wavelength)
     return (amplitude * phase).astype(np.complex128)
 
 
@@ -157,6 +162,7 @@ def aerial_image(
         obscuration_ratio=pupil_spec.obscuration_ratio,
         wavelength=pupil_spec.wavelength,
         zernike=dict(pupil_spec.zernike) if pupil_spec.zernike else None,
+        defocus_m=pupil_spec.defocus_m,
     )
 
     spectrum = np.fft.fftshift(np.fft.fft2(mask_field))

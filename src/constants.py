@@ -4,8 +4,6 @@ All units are SI unless noted. Length in meters, energy in joules.
 Reference: PROJECT_OVERVIEW.md §7, 진행계획서.md §12.1.
 """
 
-import math
-
 LAMBDA_EUV: float = 13.5e-9
 NA_HIGH: float = 0.55
 NA_STANDARD: float = 0.33

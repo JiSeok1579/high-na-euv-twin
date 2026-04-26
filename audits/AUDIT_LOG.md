@@ -19,6 +19,8 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-26 | Phase 3 | mitigation | MT-006 defocus 부호 컨벤션 + MT-007 gitignore | 🟢 PASS | [docs/phase3_design.md](../docs/phase3_design.md) | `src/wafer_topo.py`, `PupilSpec.defocus_m`, `tests/phase3_DOF.py` 추가. Phase 3 Part 01 진입 |
+| 2026-04-26 | Phase 1 | external (DS) | EXT-AUD-002 Post-Audit Fixes (PR #4 ee30c04) | 🟢 PASS (clean) | [00_FINAL_audit.md](external/reports/EXT-AUD-2026-04-26-002_phase1_post_audit_fixes/00_FINAL_audit.md) | MT-001~005 100%/83% 처리. 위험 지수 32.9→7.2 (-78%). 9/9 tests PASS. 자동 squash merge 검증 |
 | 2026-04-26 | meta | mitigation | EXT-AUD-001 P0/P1 후속 조치 | 🟢 PASS | [REVIEWER_DIRECTIVE.md](../REVIEWER_DIRECTIVE.md) | MT-001~005 처리: CLAUDE.md v2 sync, 진행계획서 §5.1 갱신, Zernike 공용화, FFT invariant test, pre-commit 도입 |
 | 2026-04-26 | meta | external (DS) | EXT-AUD-001 Phase 1 첫 외부 감사 (4-md) | 🟡 PASS w/ 1 P0 | [00_FINAL_audit.md](external/reports/EXT-AUD-2026-04-26-001_phase1_initial_review/00_FINAL_audit.md) | REVIEWER_DIRECTIVE v2.0 발효 후 첫 시연. P0 1건: .github/CLAUDE.md sync 필요 |
 | 2026-04-26 | Phase 1 | sim (간접) | aerial image MVP 완료 | 🟢 PASS | [docs/phase1_design.md](../docs/phase1_design.md) | 5/5 unit tests PASS, KPI K1·K2 합격, 7 단순화 4중 기록 100% |
@@ -30,13 +32,21 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           5
-PASS:                4
+총 감사 수:           7
+PASS:                6
 PASS WITH P0:        1
 CAUTION:             0
 MAJOR RISK:          0
 PHYSICAL VIOLATION:  0
 UNVERIFIED:          0
+
+추세 (EXT-AUD-001 → 002):
+  위험 지수 가중 합계:  32.9 → 7.2 (-78%) ★
+  P0 개수:             1 → 0   (-100%)
+  Mitigation 처리율:    100% (7/7, MT-006/007 완료)
+  단위 테스트 수:       5 → 9 → 14 (Phase 3 Part 01 포함)
+  KPI 평균 진척률:      33% (유지, mitigation PR이라 변화 없음)
+  단순화 4중 기록률:    100% 유지
 ```
 
 ---
@@ -47,7 +57,7 @@ UNVERIFIED:          0
 
 | ID | 생성일 | 등급 | 내용 | 데드라인 | 출처 |
 |----|--------|------|------|----------|------|
-| MT-006 | 2026-04-26 | P1 | Phase 3 entry 전 defocus 부호 컨벤션 fix + 테스트 | Phase 3 entry 전 | EXT-AUD-001 §4.3 P1-06 |
+| (없음) | | | | | |
 
 ---
 
@@ -60,6 +70,8 @@ UNVERIFIED:          0
 | MT-003 | 2026-04-26 | P1 | `_wavefront` → `src/optics/zernike.py` 추출 | `src/optics/zernike.py`, `src/pupil.py`, `src/aerial.py` |
 | MT-004 | 2026-04-26 | P1 | FFT invariant tests 신설 | `tests/audits/test_fft_invariants.py` |
 | MT-005 | 2026-04-26 | P1 | pre-commit hook 도입 | `.pre-commit-config.yaml`, `requirements-dev.txt` |
+| MT-006 | 2026-04-26 | P1 | Phase 3 defocus 부호 컨벤션 fix + 테스트 | `docs/phase3_design.md`, `src/wafer_topo.py`, `tests/phase3_DOF.py` |
+| MT-007 | 2026-04-26 | P1 | Python cache ignore pattern 명시 확인 | `.gitignore` |
 
 ---
 

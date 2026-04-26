@@ -1,9 +1,9 @@
 """Pupil function for the projection optics.
 
 Implements the annular pupil with optional central obscuration and
-Zernike-polynomial wavefront aberration. The pupil is sampled on a square
-frequency-domain grid of normalized spatial frequencies (f_x, f_y) where
-the unit circle corresponds to the system NA.
+Zernike-polynomial wavefront aberration plus Phase 3 constant defocus. The
+pupil is sampled on a square frequency-domain grid of normalized spatial
+frequencies (f_x, f_y) where the unit circle corresponds to the system NA.
 
 Conventions
 -----------
@@ -11,6 +11,8 @@ Conventions
 - Pupil amplitude is 1 inside the annulus and 0 outside.
 - Aberration adds a phase exp(i · 2π · W / lambda), where W is the
   optical path difference produced by the Zernike series at (rho, theta).
+- Defocus uses the Phase 3 sign convention from `wafer_topo.py`: positive
+  defocus means wafer above best focus and adds +π·z·NA²/λ·rho².
 
 Reference
 ---------
@@ -27,6 +29,7 @@ import numpy as np
 
 from . import constants as C
 from .optics import ZernikeCoeffs, wavefront
+from .wafer_topo import defocus_pupil_phase
 
 
 @dataclass(frozen=True)
@@ -38,6 +41,7 @@ class PupilSpec:
     obscuration_ratio: float = C.DEFAULT_OBSCURATION_RATIO
     wavelength: float = C.LAMBDA_EUV
     zernike: ZernikeCoeffs = field(default_factory=dict)
+    defocus_m: float = 0.0
 
     def __post_init__(self) -> None:
         if self.grid_size <= 0 or self.grid_size % 2 != 0:
@@ -48,6 +52,8 @@ class PupilSpec:
             raise ValueError("obscuration_ratio must be in [0, 1)")
         if self.wavelength <= 0.0:
             raise ValueError("wavelength must be positive")
+        if not np.isfinite(self.defocus_m):
+            raise ValueError("defocus_m must be finite")
 
 
 def _frequency_grid(grid_size: int) -> tuple[np.ndarray, np.ndarray]:
@@ -77,11 +83,17 @@ def build_pupil(spec: PupilSpec) -> np.ndarray:
 
     amplitude = annulus.astype(np.float64)
 
+    phase = np.ones_like(amplitude, dtype=np.complex128)
     if spec.zernike:
         w_waves = wavefront(rho, theta, spec.zernike)
-        phase = np.exp(1j * 2.0 * np.pi * w_waves)
-    else:
-        phase = np.ones_like(amplitude, dtype=np.complex128)
+        phase *= np.exp(1j * 2.0 * np.pi * w_waves)
+    if spec.defocus_m != 0.0:
+        phase *= defocus_pupil_phase(
+            rho,
+            spec.defocus_m,
+            na=spec.na,
+            wavelength=spec.wavelength,
+        )
 
     return (amplitude * phase).astype(np.complex128)
 

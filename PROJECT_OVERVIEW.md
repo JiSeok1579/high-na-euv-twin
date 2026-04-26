@@ -230,16 +230,19 @@ resist: threshold
 - ⏳ `논문/papers/pdfs/` — Open Access 11편 다운로드 (사용자 수동, 외부 네트워크 필요)
 - ✅ `src/` (Phase 1) — `constants.py`, `pupil.py`, `mask.py`, `aerial.py`
 - ✅ `src/optics/zernike.py` — Zernike wavefront helper 공용화
-- ⏳ `src/` (Phase 2–6) — `illuminator.py`, `wafer_topo.py`, `mask_3d.py`, `resist_*.py`, `smo.py`, `pmwo.py`, `metrics.py`
+- ✅ `src/wafer_topo.py` — Phase 3 defocus sign convention + pupil phase helper
+- ⏳ `src/` (Phase 2–6) — `illuminator.py`, `mask_3d.py`, `resist_*.py`, `smo.py`, `pmwo.py`, `metrics.py`
 - ✅ `tests/phase1_aerial_image.py` — 5 unit tests, all PASS
 - ✅ `tests/audits/test_fft_invariants.py` — Parseval / fftshift / NA scaling / grid refinement invariant tests
-- ⏳ `tests/` (Phase 2–6) — 각 Phase 단위 테스트
+- ✅ `tests/phase3_DOF.py` — defocus sign / conjugacy / zero-focus regression tests
+- ⏳ `tests/` (Phase 2–6) — 후속 Phase 단위 테스트
 - ✅ `notebooks/0_first_aerial_image.ipynb` — Phase 1 데모
 - ⏳ `notebooks/` (Phase 2–6) — 후속 데모
 - ⏳ `data/absorber_nk/` — absorber n,k 데이터 (paper 7, 17 후보 재료)
 - ✅ `docs/phase1_design.md` — Phase 1 설계 결정 + 단순화 명시
 - ✅ `.pre-commit-config.yaml` — ruff + basic file hygiene hooks
 - ✅ `.github/` + `scripts/configure_github_automerge.sh` — CI, Claude review, title-gated auto-merge 셋업
+- ✅ `docs/phase3_design.md` — defocus 부호 컨벤션 + 현재 한계
 - ⏳ `docs/` (Phase 2–6, API) — 후속 문서
 
 ### 6.3 권장 디렉토리 스캐폴딩 (제안)

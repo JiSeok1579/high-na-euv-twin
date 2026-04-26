@@ -1,0 +1,93 @@
+"""Phase 3 smoke tests for defocus sign convention and pupil integration."""
+
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+from src import constants as C
+from src.aerial import aerial_image
+from src.mask import MaskGrid, kirchhoff_mask, line_space_pattern
+from src.pupil import PupilSpec, build_pupil
+from src.wafer_topo import (
+    defocus_phase_radians,
+    defocus_pupil_phase,
+    height_to_defocus_m,
+)
+
+
+def test_defocus_phase_sign_convention_is_fixed():
+    """Positive z maps to positive phase at the pupil edge."""
+    rho = np.array([0.0, 0.5, 1.0])
+    dz = 20e-9
+
+    plus = defocus_phase_radians(rho, dz, na=C.NA_HIGH, wavelength=C.LAMBDA_EUV)
+    minus = defocus_phase_radians(rho, -dz, na=C.NA_HIGH, wavelength=C.LAMBDA_EUV)
+
+    expected_edge = np.pi * dz * C.NA_HIGH**2 / C.LAMBDA_EUV
+    assert plus[-1] == pytest.approx(expected_edge)
+    assert plus[0] == pytest.approx(0.0)
+    assert np.allclose(minus, -plus)
+
+
+def test_height_to_defocus_uses_focus_plane_reference():
+    """Wafer height above focus is positive signed defocus."""
+    heights = np.array([15e-9, 10e-9, 5e-9])
+    expected = np.array([5e-9, 0.0, -5e-9])
+    assert np.allclose(height_to_defocus_m(heights, focus_plane_m=10e-9), expected)
+
+
+def test_defocus_pupil_phase_conjugates_for_opposite_signs():
+    """The opposite defocus sign must produce the conjugate pupil phase."""
+    rho = np.linspace(0.0, 1.0, 9)
+    dz = 30e-9
+
+    plus = defocus_pupil_phase(rho, dz)
+    minus = defocus_pupil_phase(rho, -dz)
+    zero = defocus_pupil_phase(rho, 0.0)
+
+    assert np.allclose(plus, np.conjugate(minus))
+    assert np.allclose(zero, np.ones_like(zero))
+
+
+def test_build_pupil_applies_expected_edge_phase():
+    """PupilSpec.defocus_m is wired into the sampled pupil phase."""
+    dz = 20e-9
+    pupil = build_pupil(
+        PupilSpec(
+            grid_size=64,
+            na=C.NA_HIGH,
+            obscuration_ratio=0.0,
+            defocus_m=dz,
+        )
+    )
+
+    center = pupil[32, 32]
+    edge = pupil[32, 0]
+    expected_edge_phase = np.exp(1j * np.pi * dz * C.NA_HIGH**2 / C.LAMBDA_EUV)
+
+    assert center == pytest.approx(1.0 + 0.0j)
+    assert edge / abs(edge) == pytest.approx(expected_edge_phase)
+
+
+def test_zero_defocus_preserves_phase1_aerial_image():
+    """Explicit zero defocus must be identical to the Phase 1 focus plane."""
+    grid = MaskGrid(nx=256, ny=64, pixel_size=2e-9)
+    mask = kirchhoff_mask(line_space_pattern(grid, pitch_m=40e-9))
+    focused_spec = PupilSpec(grid_size=256, na=C.NA_HIGH, obscuration_ratio=0.2)
+    zero_defocus_spec = PupilSpec(
+        grid_size=256,
+        na=C.NA_HIGH,
+        obscuration_ratio=0.2,
+        defocus_m=0.0,
+    )
+
+    focused, _ = aerial_image(mask, grid, pupil_spec=focused_spec, anamorphic=False)
+    zero_defocus, _ = aerial_image(
+        mask,
+        grid,
+        pupil_spec=zero_defocus_spec,
+        anamorphic=False,
+    )
+
+    assert np.allclose(zero_defocus, focused)
