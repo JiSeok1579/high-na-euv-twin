@@ -10,11 +10,13 @@ from src.dof import focus_drilling_average
 from src.mask import MaskGrid, kirchhoff_mask, line_space_pattern
 from src.pupil import PupilSpec
 from src.resist_depth import (
+    depth_cd_profile,
     depth_attenuation_factors,
     depth_defocus_values,
     depth_resolved_dose_stack,
     depth_resolved_threshold_resist,
     focus_depth_resolved_resist,
+    sidewall_angle_proxy,
     top_bottom_dose_asymmetry,
 )
 
@@ -124,3 +126,87 @@ def test_focus_depth_resolved_resist_reports_top_bottom_summary():
     assert bottom.defocus_m < top.defocus_m
     assert bottom.mean_dose < top.mean_dose
     assert bottom.attenuation < top.attenuation
+
+    profile = sidewall_angle_proxy(
+        result.exposed_stack,
+        result.depth_values_m,
+        result.wafer.pixel_x_m,
+    )
+    assert len(profile.profile) == 3
+    assert 0.0 < profile.sidewall_angle_deg <= 90.0
+
+
+def test_depth_cd_profile_reports_center_line_cd_by_slice():
+    """The L2 profile helper extracts through-resist CD per depth slice."""
+    exposed_stack = _line_stack(widths_px=[20, 30, 40])
+    profile = depth_cd_profile(
+        exposed_stack,
+        [0.0, 50e-9, 100e-9],
+        pixel_size_m=1e-9,
+    )
+
+    assert [point.depth_m for point in profile] == pytest.approx(
+        [0.0, 50e-9, 100e-9]
+    )
+    assert [point.cd_m for point in profile] == pytest.approx(
+        [20e-9, 30e-9, 40e-9]
+    )
+    assert profile[2].exposed_fraction > profile[0].exposed_fraction
+
+
+def test_sidewall_angle_proxy_is_vertical_for_constant_cd():
+    """No through-stack CD change should map to a vertical 90 degree wall."""
+    estimate = sidewall_angle_proxy(
+        _line_stack(widths_px=[24, 24, 24]),
+        [0.0, 50e-9, 100e-9],
+        pixel_size_m=1e-9,
+    )
+
+    assert estimate.cd_delta_m == pytest.approx(0.0)
+    assert estimate.edge_tilt_m_per_m == pytest.approx(0.0)
+    assert estimate.sidewall_angle_deg == pytest.approx(90.0)
+
+
+def test_sidewall_angle_proxy_detects_tapered_profile():
+    """A wider bottom CD should produce a positive edge tilt and lower SWA."""
+    estimate = sidewall_angle_proxy(
+        _line_stack(widths_px=[20, 30, 40]),
+        [0.0, 50e-9, 100e-9],
+        pixel_size_m=1e-9,
+    )
+
+    assert estimate.top_cd_m == pytest.approx(20e-9)
+    assert estimate.bottom_cd_m == pytest.approx(40e-9)
+    assert estimate.cd_delta_m == pytest.approx(20e-9)
+    assert estimate.edge_tilt_m_per_m == pytest.approx(0.1)
+    assert estimate.sidewall_angle_deg == pytest.approx(
+        float(np.degrees(np.arctan2(1.0, 0.1)))
+    )
+    assert estimate.sidewall_angle_deg < 90.0
+
+
+def test_depth_profile_rejects_bad_stack_shape():
+    """Profile extraction should fail early on inconsistent stack metadata."""
+    with pytest.raises(ValueError, match="depth axis"):
+        depth_cd_profile(
+            _line_stack(widths_px=[20, 30]),
+            [0.0, 50e-9, 100e-9],
+            pixel_size_m=1e-9,
+        )
+    with pytest.raises(ValueError, match="line_index"):
+        depth_cd_profile(
+            _line_stack(widths_px=[20, 30]),
+            [0.0, 50e-9],
+            pixel_size_m=1e-9,
+            line_index=99,
+        )
+
+
+def _line_stack(widths_px: list[int], *, nx: int = 96, ny: int = 7) -> np.ndarray:
+    stack = np.zeros((len(widths_px), ny, nx), dtype=bool)
+    center = nx // 2
+    for index, width_px in enumerate(widths_px):
+        start = center - width_px // 2
+        stop = start + width_px
+        stack[index, :, start:stop] = True
+    return stack

@@ -9,6 +9,7 @@ import numpy as np
 
 from .aerial import WaferGrid, aerial_image
 from .mask import MaskGrid
+from .metrics import critical_dimension
 from .pupil import PupilSpec
 
 
@@ -21,6 +22,28 @@ class DepthSliceSummary:
     attenuation: float
     mean_dose: float
     exposed_fraction: float
+
+
+@dataclass(frozen=True)
+class DepthProfileSlice:
+    """Per-depth printed profile summary from a thresholded resist stack."""
+
+    depth_m: float
+    cd_m: float
+    exposed_fraction: float
+
+
+@dataclass(frozen=True)
+class SidewallAngleProxy:
+    """Deterministic sidewall-angle proxy from through-resist CD variation."""
+
+    profile: tuple[DepthProfileSlice, ...]
+    top_cd_m: float
+    bottom_cd_m: float
+    cd_delta_m: float
+    thickness_m: float
+    edge_tilt_m_per_m: float
+    sidewall_angle_deg: float
 
 
 @dataclass(frozen=True)
@@ -142,6 +165,89 @@ def top_bottom_dose_asymmetry(dose_stack: np.ndarray) -> float:
     return float((top_mean - bottom_mean) / top_mean)
 
 
+def depth_cd_profile(
+    exposed_stack: np.ndarray,
+    depth_values_m: Iterable[float],
+    pixel_size_m: float,
+    *,
+    line_index: int | None = None,
+    foreground: bool = True,
+    include_boundary: bool = False,
+) -> tuple[DepthProfileSlice, ...]:
+    """Return center-line CD and exposed fraction for each resist depth."""
+    depths = _validate_depth_values(depth_values_m)
+    _validate_pixel_size(pixel_size_m)
+    stack = _as_exposed_stack(exposed_stack, expected_depths=len(depths))
+    if line_index is not None:
+        if not isinstance(line_index, int):
+            raise ValueError("line_index must be an integer y-axis index")
+        if not 0 <= line_index < stack.shape[1]:
+            raise ValueError("line_index must be within the exposed stack y-axis")
+
+    y_index = stack.shape[1] // 2 if line_index is None else line_index
+    return tuple(
+        DepthProfileSlice(
+            depth_m=depth_m,
+            cd_m=critical_dimension(
+                stack[index, y_index, :],
+                pixel_size_m,
+                foreground=foreground,
+                include_boundary=include_boundary,
+            ),
+            exposed_fraction=float(np.mean(stack[index])),
+        )
+        for index, depth_m in enumerate(depths)
+    )
+
+
+def sidewall_angle_proxy(
+    exposed_stack: np.ndarray,
+    depth_values_m: Iterable[float],
+    pixel_size_m: float,
+    *,
+    line_index: int | None = None,
+    foreground: bool = True,
+    include_boundary: bool = False,
+) -> SidewallAngleProxy:
+    """Estimate a vertical-wall-normalized SWA proxy from top-to-bottom CD.
+
+    The returned angle is measured relative to the wafer plane: 90 degrees is a
+    vertical sidewall, while stronger through-resist CD taper lowers the angle.
+    """
+    profile = depth_cd_profile(
+        exposed_stack,
+        depth_values_m,
+        pixel_size_m,
+        line_index=line_index,
+        foreground=foreground,
+        include_boundary=include_boundary,
+    )
+    if len(profile) < 2:
+        raise ValueError("sidewall angle proxy requires at least two depth slices")
+
+    top = profile[0]
+    bottom = profile[-1]
+    thickness_m = bottom.depth_m - top.depth_m
+    if thickness_m <= 0.0:
+        raise ValueError("depth profile thickness must be positive")
+
+    cd_delta_m = bottom.cd_m - top.cd_m
+    edge_tilt_m_per_m = 0.5 * cd_delta_m / thickness_m
+    sidewall_angle_deg = float(
+        np.degrees(np.arctan2(1.0, abs(edge_tilt_m_per_m)))
+    )
+
+    return SidewallAngleProxy(
+        profile=profile,
+        top_cd_m=top.cd_m,
+        bottom_cd_m=bottom.cd_m,
+        cd_delta_m=float(cd_delta_m),
+        thickness_m=float(thickness_m),
+        edge_tilt_m_per_m=float(edge_tilt_m_per_m),
+        sidewall_angle_deg=sidewall_angle_deg,
+    )
+
+
 def focus_depth_resolved_resist(
     mask_field: np.ndarray,
     mask_grid: MaskGrid,
@@ -225,3 +331,23 @@ def _validate_depth_values(depth_values_m: Iterable[float]) -> tuple[float, ...]
     if any(next_value < value for value, next_value in zip(depths, depths[1:])):
         raise ValueError("depth_values_m must be sorted from top to bottom")
     return depths
+
+
+def _as_exposed_stack(
+    exposed_stack: np.ndarray,
+    *,
+    expected_depths: int,
+) -> np.ndarray:
+    stack = np.asarray(exposed_stack, dtype=bool)
+    if stack.ndim != 3:
+        raise ValueError("exposed_stack must be a 3-D depth/y/x boolean stack")
+    if stack.shape[0] != expected_depths:
+        raise ValueError("exposed_stack depth axis must match depth_values_m length")
+    if stack.shape[1] == 0 or stack.shape[2] == 0:
+        raise ValueError("exposed_stack y/x dimensions must be non-empty")
+    return stack
+
+
+def _validate_pixel_size(pixel_size_m: float) -> None:
+    if not np.isfinite(pixel_size_m) or pixel_size_m <= 0.0:
+        raise ValueError("pixel_size_m must be a positive finite value")
