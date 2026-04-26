@@ -19,6 +19,7 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-26 | Phase 3 | mitigation | MT-012 Phase 3 Part 03 k₂ fitting + focus-drilling MVP | 🟢 PASS | [docs/phase3_DOF_analysis.md](../docs/phase3_DOF_analysis.md) | K3 formula gate 50%→100%. `fit_k2_from_dof_cases`, `fit_k2_from_metrics`, `focus_drilling_average` 추가. 25/25 tests PASS |
 | 2026-04-26 | meta | housekeeping | MT-011/013/014 v2.1 sync + 문서 drift 정리 | 🟢 PASS | [REVIEWER_DIRECTIVE.md](../REVIEWER_DIRECTIVE.md) | `.github/CLAUDE.md` v2.1 자동 트리거 sync, 진행계획서 §13 v1.2/v1.3, phase3_design P3-L2 갱신 |
 | 2026-04-26 | Phase 3 | external (DS) | EXT-AUD-004 Phase 3 Part 02 (DOF metrics + MT-008~010, 자동 트리거) | 🟡 PASS w/ 1 P0 | [00_FINAL_audit.md](external/reports/EXT-AUD-2026-04-26-004_phase3_part02_dof_metrics/00_FINAL_audit.md) | REVIEWER_DIRECTIVE v2.1 §10.5 자동 트리거 첫 적용. KPI K3 첫 정량 진척 (0%→50%). 메타 sync P0 1건 (CLAUDE.md v2.1) |
 | 2026-04-26 | meta | system | REVIEWER_DIRECTIVE v2.1 — 자동 외부감사 트리거 신설 | 🟢 PASS | [REVIEWER_DIRECTIVE.md](../REVIEWER_DIRECTIVE.md) | §10.5 신설: 코드 수정 + 다음지시 요청 시 4-md 폴더 자동 작성 |
@@ -37,8 +38,8 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           12
-PASS:                10
+총 감사 수:           13
+PASS:                11
 PASS WITH P0:        2
 CAUTION:             0
 MAJOR RISK:          0
@@ -48,12 +49,12 @@ UNVERIFIED:          0
 추세 (4-point established: EXT-AUD-001 → 002 → 003 → 004):
   위험 지수 가중 합계:  32.9 → 7.2 → 5.5 → 20.2 (메타 sync 시 spike 패턴)
   P0 개수:             1 → 0 → 0 → 1 → 0 (MT-011 처리)
-  P1 개수:             6 → 2 → 0 → 3 → 1 (MT-012만 남김)
-  Mitigation 처리율 (누적): — → 86% → 100% → 100% → 93% (13/14)
-  단위 테스트 수:       5 → 9 → 14 → 20 (+300% 누적) ★
-  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 (100% 유지)
-  KPI K3 (DOF 정량):   0% → 0% → enabled → 50% ★ (첫 정량 진척)
-  KPI 평균 진척률:      33% → 33% → 33%+ → 42%
+  P1 개수:             6 → 2 → 0 → 3 → 1 → 0 (MT-012 처리)
+  Mitigation 처리율 (누적): — → 86% → 100% → 100% → 93% → 100% (14/14)
+  단위 테스트 수:       5 → 9 → 14 → 20 → 25 (+400% 누적) ★
+  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 → 25/25 (100% 유지)
+  KPI K3 (DOF 정량):   0% → 0% → enabled → 50% → 100% ★
+  KPI 평균 진척률:      33% → 33% → 33%+ → 42% → 50%
   누적 단순화:          7 → 7 → 11 → 13 (P3-L5/L6 신규)
   단순화 4중 기록률:    100% → 100% → 100% → 85% (drift 시작 — P3-L5/L6 명시 필요)
 
@@ -70,7 +71,7 @@ UNVERIFIED:          0
 
 | ID | 생성일 | 등급 | 내용 | 데드라인 | 출처 |
 |----|--------|------|------|----------|------|
-| MT-012 | 2026-04-26 | P1 | k₂ fitting 보고 (NA/pitch sweep + DOF = k₂·λ/NA² 정량 검증, KPI K3 100% 합격선) | Phase 3 Part 03 entry | EXT-AUD-004 §4.2 P1-01 (REC-EUV-01) |
+| (없음) | | | | | |
 
 ---
 
@@ -89,6 +90,7 @@ UNVERIFIED:          0
 | MT-009 | 2026-04-26 | P2 | defocus-aware pupil sampling sanity check | `src/wafer_topo.py`, `src/pupil.py`, `src/aerial.py` |
 | MT-010 | 2026-04-26 | P2 | defocus invariant tests 추가 | `tests/audits/test_fft_invariants.py` |
 | MT-011 | 2026-04-26 | **P0** | `.github/CLAUDE.md` 를 REVIEWER_DIRECTIVE v2.1 자동 트리거 절차로 sync | `.github/CLAUDE.md` |
+| MT-012 | 2026-04-26 | P1 | k₂ fitting 보고 (NA/pitch sweep + DOF = k₂·λ/NA² 정량 검증, KPI K3 100% 합격선) | `src/dof.py`, `tests/phase3_DOF.py`, `docs/phase3_DOF_analysis.md` |
 | MT-013 | 2026-04-26 | P1 | `진행계획서.md §13` v1.2 + v1.3 변경 이력 추가 | `진행계획서.md` |
 | MT-014 | 2026-04-26 | P1 | `docs/phase3_design.md §4` P3-L2 문구 갱신 | `docs/phase3_design.md` |
 

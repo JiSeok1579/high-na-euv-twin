@@ -7,7 +7,15 @@ import pytest
 
 from src import constants as C
 from src.aerial import aerial_image
-from src.dof import FocusSample, focus_stack_contrast, nominal_depth_of_focus
+from src.dof import (
+    FocusSample,
+    fit_k2_from_dof_cases,
+    fit_k2_from_metrics,
+    focus_drilling_average,
+    focus_stack_contrast,
+    k2_from_dof,
+    nominal_depth_of_focus,
+)
 from src.mask import MaskGrid, kirchhoff_mask, line_space_pattern
 from src.pupil import PupilSpec, build_pupil
 from src.wafer_topo import (
@@ -160,3 +168,86 @@ def test_zero_defocus_preserves_phase1_aerial_image():
     )
 
     assert np.allclose(zero_defocus, focused)
+
+
+def test_k2_fit_matches_rayleigh_depth_of_focus_sweep():
+    """Part 03 verifies the `DOF = k2 * lambda / NA^2` fit gate."""
+    cases = [
+        (C.NA_STANDARD, C.depth_of_focus(na=C.NA_STANDARD), 64e-9),
+        (C.NA_HIGH, C.depth_of_focus(na=C.NA_HIGH), 36e-9),
+    ]
+    result = fit_k2_from_dof_cases(cases)
+
+    assert [case.pitch_m for case in result.cases] == [64e-9, 36e-9]
+    assert result.mean_k2 == pytest.approx(C.K2_TYPICAL)
+    assert result.std_k2 == pytest.approx(0.0)
+    assert result.relative_error == pytest.approx(0.0)
+    assert result.passed
+    assert k2_from_dof(C.depth_of_focus(), C.NA_HIGH) == pytest.approx(C.K2_TYPICAL)
+
+
+def test_k2_fit_rejects_large_rayleigh_error():
+    """The K3 gate must fail if fitted k2 is outside the tolerance band."""
+    result = fit_k2_from_dof_cases(
+        [(C.NA_HIGH, 2.0 * C.depth_of_focus(na=C.NA_HIGH))],
+        tolerance_fraction=0.30,
+    )
+
+    assert result.mean_k2 == pytest.approx(1.0)
+    assert not result.passed
+
+
+def test_k2_fit_from_nominal_dof_metrics():
+    """Already-computed DOFMetrics can feed the same k2 fitter."""
+    dof_m = C.depth_of_focus(na=C.NA_HIGH)
+    samples = [
+        FocusSample(-0.75 * dof_m, 0.70, 0.70),
+        FocusSample(-0.50 * dof_m, 0.80, 0.80),
+        FocusSample(0.0, 1.00, 1.00),
+        FocusSample(0.50 * dof_m, 0.80, 0.80),
+        FocusSample(0.75 * dof_m, 0.70, 0.70),
+    ]
+    metrics = nominal_depth_of_focus(samples, threshold_fraction=0.8)
+    result = fit_k2_from_metrics([(C.NA_HIGH, metrics)])
+
+    assert metrics.dof_m == pytest.approx(dof_m)
+    assert result.mean_k2 == pytest.approx(C.K2_TYPICAL)
+    assert result.passed
+
+
+def test_focus_drilling_single_slice_matches_aerial_image():
+    """A one-slice focus-drilling pass is exactly the baseline aerial image."""
+    grid = MaskGrid(nx=256, ny=64, pixel_size=2e-9)
+    mask = kirchhoff_mask(line_space_pattern(grid, pitch_m=40e-9))
+    pupil_spec = PupilSpec(grid_size=256, na=C.NA_HIGH, obscuration_ratio=0.0)
+
+    focused, wafer = aerial_image(mask, grid, pupil_spec=pupil_spec, anamorphic=False)
+    drilled, drilled_wafer = focus_drilling_average(
+        mask,
+        grid,
+        [0.0],
+        pupil_spec=pupil_spec,
+        anamorphic=False,
+    )
+
+    assert drilled_wafer == wafer
+    assert np.allclose(drilled, focused)
+
+
+def test_focus_drilling_weighted_average_is_normalized_and_finite():
+    """Depth-slice averaging keeps a bounded finite intensity plane."""
+    grid = MaskGrid(nx=256, ny=64, pixel_size=2e-9)
+    mask = kirchhoff_mask(line_space_pattern(grid, pitch_m=40e-9))
+    drilled, wafer = focus_drilling_average(
+        mask,
+        grid,
+        [-20e-9, 0.0, 20e-9],
+        pupil_spec=PupilSpec(grid_size=256, na=C.NA_HIGH, obscuration_ratio=0.0),
+        weights=[1.0, 2.0, 1.0],
+        anamorphic=False,
+    )
+
+    assert drilled.shape == wafer.shape()
+    assert np.all(np.isfinite(drilled))
+    assert float(np.min(drilled)) >= 0.0
+    assert float(np.max(drilled)) <= 1.0 + 1e-12
