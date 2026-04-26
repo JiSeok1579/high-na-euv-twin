@@ -44,11 +44,11 @@ ensure_label() {
   local color="$2"
   local description="$3"
 
-  if gh label list --repo "${REPO}" --json name --jq '.[].name' | grep -Fxq "${name}"; then
-    gh label edit "${name}" --repo "${REPO}" --color "${color}" --description "${description}" >/dev/null
-  else
-    gh label create "${name}" --repo "${REPO}" --color "${color}" --description "${description}" >/dev/null
-  fi
+  gh label create "${name}" \
+    --repo "${REPO}" \
+    --color "${color}" \
+    --description "${description}" \
+    --force >/dev/null
 }
 
 echo "Ensuring workflow labels..."
