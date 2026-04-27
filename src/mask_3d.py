@@ -8,6 +8,7 @@ interface before a higher-fidelity electromagnetic model is introduced.
 
 from __future__ import annotations
 
+import csv
 from dataclasses import dataclass
 import json
 import math
@@ -17,7 +18,9 @@ from typing import Iterable
 import numpy as np
 
 from . import constants as C
+from .aerial import WaferGrid, aerial_image
 from .mask import MaskGrid, kirchhoff_mask
+from .pupil import PupilSpec
 
 
 @dataclass(frozen=True)
@@ -111,6 +114,21 @@ class AbsorberScreeningRow:
     used_lookup: bool
 
 
+@dataclass(frozen=True)
+class Mask3DAerialRegressionResult:
+    """Aerial-image comparison against imported rigorous or measured reference data."""
+
+    predicted_intensity: np.ndarray
+    reference_intensity: np.ndarray
+    wafer_grid: WaferGrid | None
+    rmse: float
+    mean_abs_error: float
+    max_abs_error: float
+    rmse_tolerance: float
+    max_abs_tolerance: float
+    passed: bool
+
+
 TABN_REFERENCE = AbsorberMaterial(
     name="TaBN reference",
     n=0.94,
@@ -197,6 +215,39 @@ def load_mask3d_lookup_json(path: str | Path) -> Mask3DLookupTable:
             raise ValueError("each lookup row must be a JSON object")
         entries.append(_lookup_entry_from_row(row, source=str(data.get("source", ""))))
     return Mask3DLookupTable(entries=tuple(entries), source=str(data.get("source", "")))
+
+
+def load_mask3d_lookup_csv(
+    path: str | Path,
+    *,
+    source: str | None = None,
+) -> Mask3DLookupTable:
+    """Load imported rigorous Mask 3D rows from a CSV table.
+
+    The CSV schema mirrors `Mask3DLookupEntry`. Length-valued columns may use
+    either meter or nanometer suffixes:
+
+    - `pitch_m` or `pitch_nm`
+    - `orientation_cd_bias_m` or `orientation_cd_bias_nm`
+    - `best_focus_shift_m` or `best_focus_shift_nm`
+
+    This keeps RCWA/DDM export ingestion explicit while avoiding hard-coded
+    assumptions about a particular vendor or solver output.
+    """
+    csv_path = Path(path)
+    table_source = source or csv_path.name
+    entries: list[Mask3DLookupEntry] = []
+    with csv_path.open("r", encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        if reader.fieldnames is None:
+            raise ValueError("lookup CSV must include a header row")
+        for row in reader:
+            if not any(_csv_cell_has_value(value) for value in row.values()):
+                continue
+            entries.append(_lookup_entry_from_row(row, source=table_source))
+    if not entries:
+        raise ValueError("lookup CSV must contain at least one data row")
+    return Mask3DLookupTable(entries=tuple(entries), source=table_source)
 
 
 def mask3d_six_effects(
@@ -325,14 +376,11 @@ def boundary_corrected_mask(
     qualitative scaffold, but it returns the same complex field type expected by
     `aerial_image`.
     """
-    baseline = kirchhoff_mask(pattern)
     absorber = _as_absorber_mask(pattern, expected_shape=grid.shape())
     if absorber_fraction is None:
         absorber_fraction = float(np.mean(absorber))
     if not 0.0 < absorber_fraction < 1.0:
         raise ValueError("absorber_fraction must be in (0, 1)")
-    if ghost_shift_px < 0:
-        raise ValueError("ghost_shift_px must be non-negative")
 
     summary = mask3d_six_effects(
         pitch_m,
@@ -342,9 +390,157 @@ def boundary_corrected_mask(
         absorber_fraction=absorber_fraction,
     )
 
+    return _boundary_corrected_mask_from_summary(
+        pattern,
+        grid,
+        summary,
+        absorber=absorber,
+        ghost_shift_px=ghost_shift_px,
+    )
+
+
+def lookup_boundary_corrected_mask(
+    pattern: np.ndarray,
+    grid: MaskGrid,
+    pitch_m: float,
+    table: Mask3DLookupTable,
+    *,
+    material: AbsorberMaterial = TABN_REFERENCE,
+    chief_ray_angle_deg: float = 6.0,
+    orientation: str = "vertical",
+    absorber_fraction: float | None = None,
+    ghost_shift_px: int = 1,
+    fallback_to_reduced: bool = True,
+) -> BoundaryCorrectionResult:
+    """Apply boundary correction using imported lookup rows when available."""
+    absorber = _as_absorber_mask(pattern, expected_shape=grid.shape())
+    if absorber_fraction is None:
+        absorber_fraction = float(np.mean(absorber))
+    if not 0.0 < absorber_fraction < 1.0:
+        raise ValueError("absorber_fraction must be in (0, 1)")
+
+    summary = lookup_mask3d_six_effects(
+        pitch_m,
+        table,
+        material=material,
+        chief_ray_angle_deg=chief_ray_angle_deg,
+        orientation=orientation,
+        absorber_fraction=absorber_fraction,
+        fallback_to_reduced=fallback_to_reduced,
+    )
+    return _boundary_corrected_mask_from_summary(
+        pattern,
+        grid,
+        summary,
+        absorber=absorber,
+        ghost_shift_px=ghost_shift_px,
+    )
+
+
+def compare_mask3d_aerial_images(
+    predicted_intensity: np.ndarray,
+    reference_intensity: np.ndarray,
+    *,
+    wafer_grid: WaferGrid | None = None,
+    rmse_tolerance: float = 0.02,
+    max_abs_tolerance: float = 0.08,
+    normalize: bool = True,
+) -> Mask3DAerialRegressionResult:
+    """Compare predicted aerial intensity against rigorous reference data."""
+    _validate_positive(rmse_tolerance, "rmse_tolerance")
+    _validate_positive(max_abs_tolerance, "max_abs_tolerance")
+    predicted = _as_aerial_reference(predicted_intensity, "predicted_intensity")
+    reference = _as_aerial_reference(reference_intensity, "reference_intensity")
+    if predicted.shape != reference.shape:
+        raise ValueError("predicted_intensity and reference_intensity shapes must match")
+    if wafer_grid is not None and predicted.shape != wafer_grid.shape():
+        raise ValueError("wafer_grid shape must match aerial image shape")
+
+    if normalize:
+        predicted = _normalize_aerial(predicted)
+        reference = _normalize_aerial(reference)
+
+    error = predicted - reference
+    rmse = float(np.sqrt(np.mean(error * error)))
+    mean_abs = float(np.mean(np.abs(error)))
+    max_abs = float(np.max(np.abs(error)))
+    passed = rmse <= rmse_tolerance and max_abs <= max_abs_tolerance
+    return Mask3DAerialRegressionResult(
+        predicted_intensity=predicted,
+        reference_intensity=reference,
+        wafer_grid=wafer_grid,
+        rmse=rmse,
+        mean_abs_error=mean_abs,
+        max_abs_error=max_abs,
+        rmse_tolerance=float(rmse_tolerance),
+        max_abs_tolerance=float(max_abs_tolerance),
+        passed=bool(passed),
+    )
+
+
+def lookup_mask3d_aerial_regression(
+    pattern: np.ndarray,
+    grid: MaskGrid,
+    pitch_m: float,
+    reference_intensity: np.ndarray,
+    table: Mask3DLookupTable,
+    *,
+    material: AbsorberMaterial = TABN_REFERENCE,
+    chief_ray_angle_deg: float = 6.0,
+    orientation: str = "vertical",
+    absorber_fraction: float | None = None,
+    ghost_shift_px: int = 1,
+    pupil_spec: PupilSpec | None = None,
+    anamorphic: bool = True,
+    rmse_tolerance: float = 0.02,
+    max_abs_tolerance: float = 0.08,
+    fallback_to_reduced: bool = True,
+) -> Mask3DAerialRegressionResult:
+    """Run lookup-driven Mask 3D correction and compare its aerial image."""
+    boundary = lookup_boundary_corrected_mask(
+        pattern,
+        grid,
+        pitch_m,
+        table,
+        material=material,
+        chief_ray_angle_deg=chief_ray_angle_deg,
+        orientation=orientation,
+        absorber_fraction=absorber_fraction,
+        ghost_shift_px=ghost_shift_px,
+        fallback_to_reduced=fallback_to_reduced,
+    )
+    predicted, wafer = aerial_image(
+        boundary.corrected_field,
+        grid,
+        pupil_spec=pupil_spec,
+        anamorphic=anamorphic,
+    )
+    return compare_mask3d_aerial_images(
+        predicted,
+        reference_intensity,
+        wafer_grid=wafer,
+        rmse_tolerance=rmse_tolerance,
+        max_abs_tolerance=max_abs_tolerance,
+    )
+
+
+def _boundary_corrected_mask_from_summary(
+    pattern: np.ndarray,
+    grid: MaskGrid,
+    summary: Mask3DEffectSummary,
+    *,
+    absorber: np.ndarray | None = None,
+    ghost_shift_px: int = 1,
+) -> BoundaryCorrectionResult:
+    baseline = kirchhoff_mask(pattern)
+    if absorber is None:
+        absorber = _as_absorber_mask(pattern, expected_shape=grid.shape())
+    if ghost_shift_px < 0:
+        raise ValueError("ghost_shift_px must be non-negative")
+
     clear = ~absorber
-    axis = 1 if orientation == "vertical" else 0
-    incidence_shift = 1 if chief_ray_angle_deg >= 0.0 else -1
+    axis = 1 if summary.orientation == "vertical" else 0
+    incidence_shift = 1 if summary.chief_ray_angle_deg >= 0.0 else -1
     incident_absorber = _shift_bool(absorber, incidence_shift, axis=axis)
     boundary_clear = clear & _edge_neighbor_mask(absorber)
     shadow_region = clear & incident_absorber
@@ -354,7 +550,7 @@ def boundary_corrected_mask(
 
     signed_phase = math.copysign(
         2.0 * math.pi * summary.phase_error_waves,
-        chief_ray_angle_deg if chief_ray_angle_deg != 0.0 else 1.0,
+        summary.chief_ray_angle_deg if summary.chief_ray_angle_deg != 0.0 else 1.0,
     )
     phase_map = np.zeros(grid.shape(), dtype=np.float64)
     phase_map[boundary_clear] = signed_phase
@@ -487,9 +683,9 @@ def _validate_positive(value: float, name: str) -> None:
 
 
 def _lookup_entry_from_row(row: dict[str, object], *, source: str) -> Mask3DLookupEntry:
-    if "pitch_m" in row:
+    if _row_has_value(row, "pitch_m"):
         pitch_m = _required_float(row, "pitch_m")
-    elif "pitch_nm" in row:
+    elif _row_has_value(row, "pitch_nm"):
         pitch_m = _required_float(row, "pitch_nm") * 1.0e-9
     else:
         raise ValueError("lookup row must include pitch_m or pitch_nm")
@@ -505,13 +701,13 @@ def _lookup_entry_from_row(row: dict[str, object], *, source: str) -> Mask3DLook
         chief_ray_angle_deg=_required_float(row, "chief_ray_angle_deg"),
         orientation=orientation,
         shadowing_loss_fraction=_required_float(row, "shadowing_loss_fraction"),
-        orientation_cd_bias_m=_required_float(row, "orientation_cd_bias_m"),
+        orientation_cd_bias_m=_required_length_m(row, "orientation_cd_bias"),
         telecentricity_error_mrad=_required_float(row, "telecentricity_error_mrad"),
         contrast_loss_fraction=_required_float(row, "contrast_loss_fraction"),
-        best_focus_shift_m=_required_float(row, "best_focus_shift_m"),
+        best_focus_shift_m=_required_length_m(row, "best_focus_shift"),
         secondary_image_fraction=_required_float(row, "secondary_image_fraction"),
         phase_error_waves=_required_float(row, "phase_error_waves"),
-        source=str(row.get("source", source)),
+        source=_optional_string(row, "source", fallback=source),
     )
     _validate_lookup_entry(entry)
     return entry
@@ -547,7 +743,55 @@ def _required_float(row: dict[str, object], name: str) -> float:
     value = row.get(name)
     if not isinstance(value, str | int | float):
         raise ValueError(f"{name} must be a numeric value")
-    return float(value)
+    try:
+        return float(value)
+    except ValueError as exc:
+        raise ValueError(f"{name} must be a numeric value") from exc
+
+
+def _required_length_m(row: dict[str, object], base_name: str) -> float:
+    meters_name = f"{base_name}_m"
+    nanometers_name = f"{base_name}_nm"
+    if _row_has_value(row, meters_name):
+        return _required_float(row, meters_name)
+    if _row_has_value(row, nanometers_name):
+        return _required_float(row, nanometers_name) * 1.0e-9
+    raise ValueError(f"{base_name} must include _m or _nm units")
+
+
+def _row_has_value(row: dict[str, object], name: str) -> bool:
+    return name in row and _csv_cell_has_value(row.get(name))
+
+
+def _csv_cell_has_value(value: object) -> bool:
+    return value is not None and str(value).strip() != ""
+
+
+def _optional_string(row: dict[str, object], name: str, *, fallback: str) -> str:
+    value = row.get(name)
+    if not _csv_cell_has_value(value):
+        return fallback
+    return str(value)
+
+
+def _as_aerial_reference(values: np.ndarray, name: str) -> np.ndarray:
+    image = np.asarray(values, dtype=np.float64)
+    if image.ndim != 2:
+        raise ValueError(f"{name} must be a 2-D aerial image")
+    if image.size == 0:
+        raise ValueError(f"{name} must contain at least one pixel")
+    if not np.all(np.isfinite(image)):
+        raise ValueError(f"{name} must contain finite values")
+    if np.any(image < 0.0):
+        raise ValueError(f"{name} intensity must be non-negative")
+    return image.copy()
+
+
+def _normalize_aerial(image: np.ndarray) -> np.ndarray:
+    peak = float(np.max(image))
+    if peak == 0.0:
+        return image.copy()
+    return image / peak
 
 
 def _matching_lookup_entries(

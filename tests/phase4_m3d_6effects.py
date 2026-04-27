@@ -7,6 +7,7 @@ import json
 import numpy as np
 import pytest
 
+from src.aerial import aerial_image
 from src.mask import MaskGrid, kirchhoff_mask, line_space_pattern
 from src.mask_3d import (
     NI_HIGH_K,
@@ -15,10 +16,14 @@ from src.mask_3d import (
     Mask3DLookupEntry,
     Mask3DLookupTable,
     boundary_corrected_mask,
+    compare_mask3d_aerial_images,
     compare_absorber_materials,
     default_absorber_materials,
     load_absorber_materials_json,
+    load_mask3d_lookup_csv,
     load_mask3d_lookup_json,
+    lookup_boundary_corrected_mask,
+    lookup_mask3d_aerial_regression,
     lookup_mask3d_six_effects,
     mask3d_six_effects,
     screen_absorber_materials,
@@ -313,22 +318,135 @@ def test_load_mask3d_lookup_json_reads_pitch_nm_rows(tmp_path):
     assert table.entries[0].pitch_m == pytest.approx(32e-9)
 
 
+def test_load_mask3d_lookup_csv_reads_nanometer_columns(tmp_path):
+    """Part 04 imports solver-export CSV rows with explicit nm length columns."""
+    path = tmp_path / "rigorous_lookup.csv"
+    path.write_text(
+        "\n".join(
+            [
+                "material_name,pitch_nm,chief_ray_angle_deg,orientation,"
+                "shadowing_loss_fraction,orientation_cd_bias_nm,"
+                "telecentricity_error_mrad,contrast_loss_fraction,"
+                "best_focus_shift_nm,secondary_image_fraction,phase_error_waves",
+                "TaBN reference,32,6,vertical,0.11,0.42,7.5,0.03,5.0,0.002,0.018",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    table = load_mask3d_lookup_csv(path, source="rcwa-smoke-table")
+
+    assert table.source == "rcwa-smoke-table"
+    assert table.entries[0].pitch_m == pytest.approx(32e-9)
+    assert table.entries[0].orientation_cd_bias_m == pytest.approx(0.42e-9)
+    assert table.entries[0].best_focus_shift_m == pytest.approx(5.0e-9)
+
+
+def test_lookup_boundary_corrected_mask_uses_imported_zero_effect_row():
+    """Imported rigorous rows can override the reduced nonzero CRA proxy."""
+    grid = MaskGrid(nx=64, ny=32, pixel_size=1e-9)
+    pattern = line_space_pattern(grid, pitch_m=16e-9)
+    table = Mask3DLookupTable(
+        entries=(
+            _lookup_entry(
+                "TaBN reference",
+                16e-9,
+                shadowing_loss_fraction=0.0,
+                orientation_cd_bias_m=0.0,
+                telecentricity_error_mrad=0.0,
+                contrast_loss_fraction=0.0,
+                best_focus_shift_m=0.0,
+                secondary_image_fraction=0.0,
+                phase_error_waves=0.0,
+            ),
+        )
+    )
+
+    result = lookup_boundary_corrected_mask(
+        pattern,
+        grid,
+        16e-9,
+        table,
+        chief_ray_angle_deg=6.0,
+    )
+
+    assert result.summary.as_effect_vector() == pytest.approx((0.0,) * 6)
+    assert np.allclose(result.corrected_field, kirchhoff_mask(pattern))
+
+
+def test_compare_mask3d_aerial_images_passes_normalized_reference():
+    """Aerial regression compares normalized solver and reference images."""
+    predicted = np.array([[0.0, 0.5, 1.0], [0.1, 0.6, 0.9]])
+    reference = 3.0 * predicted
+
+    result = compare_mask3d_aerial_images(predicted, reference)
+
+    assert result.passed
+    assert result.rmse == pytest.approx(0.0)
+    assert np.max(result.predicted_intensity) == pytest.approx(1.0)
+
+
+def test_compare_mask3d_aerial_images_fails_large_error():
+    """Aerial regression fails when imported reference data is far away."""
+    predicted = np.array([[0.0, 1.0], [0.0, 1.0]])
+    reference = np.array([[1.0, 0.0], [1.0, 0.0]])
+
+    result = compare_mask3d_aerial_images(
+        predicted,
+        reference,
+        rmse_tolerance=0.1,
+        max_abs_tolerance=0.2,
+    )
+
+    assert not result.passed
+    assert result.max_abs_error == pytest.approx(1.0)
+
+
+def test_lookup_mask3d_aerial_regression_closes_identical_reference():
+    """Lookup-driven Mask 3D fields can be gated against reference aerial data."""
+    grid = MaskGrid(nx=64, ny=32, pixel_size=1e-9)
+    pattern = line_space_pattern(grid, pitch_m=16e-9)
+    table = Mask3DLookupTable(entries=(_lookup_entry("TaBN reference", 16e-9),))
+    boundary = lookup_boundary_corrected_mask(pattern, grid, 16e-9, table)
+    reference, _ = aerial_image(boundary.corrected_field, grid)
+
+    result = lookup_mask3d_aerial_regression(
+        pattern,
+        grid,
+        16e-9,
+        reference,
+        table,
+        rmse_tolerance=1e-12,
+        max_abs_tolerance=1e-12,
+    )
+
+    assert result.passed
+    assert result.wafer_grid is not None
+    assert result.predicted_intensity.shape == reference.shape
+
+
 def _lookup_entry(
     material_name: str,
     pitch_m: float,
     *,
     best_focus_shift_m: float = 8e-9,
+    shadowing_loss_fraction: float = 0.15,
+    orientation_cd_bias_m: float = 3e-10,
+    telecentricity_error_mrad: float = 8.0,
+    contrast_loss_fraction: float = 0.02,
+    secondary_image_fraction: float = 0.001,
+    phase_error_waves: float = 0.02,
 ) -> Mask3DLookupEntry:
     return Mask3DLookupEntry(
         material_name=material_name,
         pitch_m=pitch_m,
         chief_ray_angle_deg=6.0,
         orientation="vertical",
-        shadowing_loss_fraction=0.15,
-        orientation_cd_bias_m=3e-10,
-        telecentricity_error_mrad=8.0,
-        contrast_loss_fraction=0.02,
+        shadowing_loss_fraction=shadowing_loss_fraction,
+        orientation_cd_bias_m=orientation_cd_bias_m,
+        telecentricity_error_mrad=telecentricity_error_mrad,
+        contrast_loss_fraction=contrast_loss_fraction,
         best_focus_shift_m=best_focus_shift_m,
-        secondary_image_fraction=0.001,
-        phase_error_waves=0.02,
+        secondary_image_fraction=secondary_image_fraction,
+        phase_error_waves=phase_error_waves,
     )
