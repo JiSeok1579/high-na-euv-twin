@@ -57,9 +57,9 @@ jupyter lab notebooks/0_first_aerial_image.ipynb
 ## Notebook Demos
 
 - `notebooks/0_first_aerial_image.ipynb`
-- `notebooks/3d_focus_stack.ipynb`
-- `notebooks/3d_pupil_wavefront.ipynb`
-- `notebooks/3d_resist_depth.ipynb`
+- `notebooks/3d_focus_stack.ipynb` - 3D focus and contrast sweeps.
+- `notebooks/3d_pupil_wavefront.ipynb` - 3D Zernike mode comparison.
+- `notebooks/3d_resist_depth.ipynb` - 3D dose-depth absorption sweep.
 - `notebooks/3_M3D_effects.ipynb`
 - `notebooks/4a_threshold_resist.ipynb`
 - `notebooks/4b_resist_levels.ipynb`

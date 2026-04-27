@@ -19,6 +19,7 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-27 | meta | visualization | MT-022 3D notebook parameter sweeps | 🟢 PASS | [PROJECT_OVERVIEW.md](../PROJECT_OVERVIEW.md) | `3d_focus_stack`, `3d_pupil_wavefront`, and `3d_resist_depth` notebooks now include focus contrast, Zernike mode, and resist absorption sweep cells. nbconvert execution PASS. 89/89 tests PASS |
 | 2026-04-27 | meta | policy | INST-001 study purpose + audit-grade relaxation | 🟢 PASS | [docs/study_grade_relaxation.md](../docs/study_grade_relaxation.md) | README, PROJECT_OVERVIEW, 진행계획서, REVIEWER_DIRECTIVE, and `.github/CLAUDE.md` now declare study purpose and study-grade severity. Workspace rename remains manual per INST-001. 89/89 tests PASS |
 | 2026-04-27 | Phase 4 | implementation | Phase 4 Part 04 rigorous-data import + aerial regression hooks | 🟢 PASS | [docs/phase4_M3D_design.md](../docs/phase4_M3D_design.md) | `load_mask3d_lookup_csv`, `lookup_boundary_corrected_mask`, `compare_mask3d_aerial_images`, `lookup_mask3d_aerial_regression`, and a rigorous import CSV template added. 89/89 tests PASS |
 | 2026-04-27 | Phase 4 | implementation | Phase 4 Part 03 absorber provenance + lookup-table hooks | 🟢 PASS | [docs/phase4_M3D_design.md](../docs/phase4_M3D_design.md) | `Mask3DLookupEntry`, `Mask3DLookupTable`, `AbsorberScreeningRow`, lookup JSON loading, pitch interpolation, reduced fallback, and candidate screening added. Absorber provenance fields added. 84/84 tests PASS |
@@ -52,8 +53,8 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           27
-PASS:                24
+총 감사 수:           28
+PASS:                25
 PASS WITH P0:        3 (EXT-AUD-001/004/005)
 CAUTION:             0
 MAJOR RISK:          0
@@ -96,7 +97,6 @@ UNVERIFIED:          0
 | MT-019 | 2026-04-26 | P3 | `_validate_*` helper 통합 → `src/utils.py` 또는 `src/_validation.py` (DRY). Study-grade 재분류: correctness 영향 없음 | Backlog | EXT-AUD-005 §4.5 + INST-001 |
 | MT-020 | 2026-04-26 | P3 | `resist_stochastic.py` 모듈 분할 검토 (chain/budget/calibration). Study-grade 재분류: 유지보수 backlog | Backlog | EXT-AUD-005 §4.5 + INST-001 |
 | MT-021 | 2026-04-26 | P3 | docs/phase5 threshold 의미 차이와 depth absorption 정량 비교. Study-grade 재분류: 정량 비교는 stretch/backlog | Backlog | EXT-AUD-005 §4.5 + INST-001 |
-| MT-022 | 2026-04-27 | P1 | 3D notebooks parameter-sweep cells 확장: focus stack, pupil wavefront, resist depth | 다음 viz PR | INST-001 Task 5 |
 
 ---
 
@@ -122,6 +122,7 @@ UNVERIFIED:          0
 | MT-014 | 2026-04-26 | P1 | `docs/phase3_design.md §4` P3-L2 문구 갱신 | `docs/phase3_design.md` |
 | **MT-015** | 2026-04-27 | **P0** | Legacy project-name rebrand to High-NA EUV Lithography Simulator + `.github/CLAUDE.md` v2.1 English-first sync | `.github/CLAUDE.md`, `README.md`, docs, audit files, source docstrings |
 | **MT-016** | 2026-04-27 | P1 | Tier 1 matplotlib 3D notebooks for focus stack, pupil wavefront, resist depth dose, and Mask 3D effect bars | `notebooks/3d_focus_stack.ipynb`, `notebooks/3d_pupil_wavefront.ipynb`, `notebooks/3d_resist_depth.ipynb`, `notebooks/3_M3D_effects.ipynb` |
+| MT-022 | 2026-04-27 | P1 | 3D notebooks parameter-sweep cells: focus contrast, Zernike mode comparison, resist absorption dose volume | `notebooks/3d_focus_stack.ipynb`, `notebooks/3d_pupil_wavefront.ipynb`, `notebooks/3d_resist_depth.ipynb` |
 
 ---
 
