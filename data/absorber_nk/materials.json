@@ -1,5 +1,6 @@
 {
   "wavelength_nm": 13.5,
+  "source": "qualitative-starter",
   "materials": [
     {
       "name": "TaBN reference",
@@ -7,7 +8,9 @@
       "k": 0.03,
       "thickness_nm": 60.0,
       "top_reflectivity": 0.018,
-      "role": "baseline absorber"
+      "role": "baseline absorber",
+      "reference": "Phase 4 starter row; replace with measured 13.5 nm constants before quantitative screening",
+      "measured": false
     },
     {
       "name": "Ni high-k candidate",
@@ -15,7 +18,9 @@
       "k": 0.085,
       "thickness_nm": 42.0,
       "top_reflectivity": 0.01,
-      "role": "high-k near-n=1 mitigation candidate"
+      "role": "high-k near-n=1 mitigation candidate",
+      "reference": "Phase 4 starter row based on qualitative high-k mitigation direction",
+      "measured": false
     },
     {
       "name": "RuTa low-n attenuated PSM candidate",
@@ -23,7 +28,9 @@
       "k": 0.055,
       "thickness_nm": 45.0,
       "top_reflectivity": 0.012,
-      "role": "low-n attenuated phase-shift candidate"
+      "role": "low-n attenuated phase-shift candidate",
+      "reference": "Phase 4 starter row based on qualitative low-n attenuated PSM direction",
+      "measured": false
     }
   ],
   "note": "Starter qualitative values for the Phase 4 reduced Mask 3D stub. Replace with measured optical constants before quantitative absorber screening."

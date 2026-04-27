@@ -20,7 +20,7 @@ jupyter lab notebooks/0_first_aerial_image.ipynb
 | 1 | Scalar Fourier optics MVP: pupil, mask, aerial image | Complete |
 | 2 | Partial coherence / illuminator | Pending |
 | 3 | Wafer topography and DOF | Complete through k2 fitting |
-| 4 | Mask 3D effects | Part 02: boundary-corrected field scaffold |
+| 4 | Mask 3D effects | Part 03: absorber provenance and lookup-table scaffold |
 | 5 | Photoresist: threshold, blur, depth, stochastic | Complete through calibration exit gates |
 | 6 | SMO / PMWO / OPC / ILT | Pending |
 

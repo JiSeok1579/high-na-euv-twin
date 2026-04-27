@@ -12,11 +12,16 @@ from src.mask_3d import (
     NI_HIGH_K,
     TABN_REFERENCE,
     AbsorberMaterial,
+    Mask3DLookupEntry,
+    Mask3DLookupTable,
     boundary_corrected_mask,
     compare_absorber_materials,
     default_absorber_materials,
     load_absorber_materials_json,
+    load_mask3d_lookup_json,
+    lookup_mask3d_six_effects,
     mask3d_six_effects,
+    screen_absorber_materials,
 )
 
 
@@ -185,6 +190,9 @@ def test_load_absorber_materials_json_accepts_measured_rows(tmp_path):
                         "k": 0.08,
                         "thickness_nm": 44.0,
                         "top_reflectivity": 0.011,
+                        "source": "metrology",
+                        "reference": "example measured row",
+                        "measured": True,
                     }
                 ]
             }
@@ -197,6 +205,9 @@ def test_load_absorber_materials_json_accepts_measured_rows(tmp_path):
     assert len(materials) == 1
     assert materials[0].name == "measured candidate"
     assert materials[0].thickness_m == pytest.approx(44e-9)
+    assert materials[0].source == "metrology"
+    assert materials[0].reference == "example measured row"
+    assert materials[0].measured
 
 
 def test_boundary_corrected_mask_rejects_grid_shape_mismatch():
@@ -207,3 +218,117 @@ def test_boundary_corrected_mask_rejects_grid_shape_mismatch():
 
     with pytest.raises(ValueError, match="pattern shape"):
         boundary_corrected_mask(pattern, wrong_grid, 16e-9)
+
+
+def test_lookup_mask3d_effects_interpolates_pitch_rows():
+    """Part 03 can replace reduced proxies with interpolated lookup rows."""
+    table = Mask3DLookupTable(
+        entries=(
+            _lookup_entry("TaBN reference", 32e-9, best_focus_shift_m=4e-9),
+            _lookup_entry("TaBN reference", 64e-9, best_focus_shift_m=12e-9),
+        ),
+        source="unit-test",
+    )
+
+    summary = lookup_mask3d_six_effects(
+        48e-9,
+        table,
+        material=TABN_REFERENCE,
+    )
+
+    assert summary.best_focus_shift_m == pytest.approx(8e-9)
+    assert summary.shadowing_loss_fraction == pytest.approx(0.15)
+
+
+def test_lookup_mask3d_effects_falls_back_without_matching_rows():
+    """Missing lookup rows do not block reduced-model smoke tests by default."""
+    table = Mask3DLookupTable(entries=(_lookup_entry("other", 32e-9),))
+
+    summary = lookup_mask3d_six_effects(32e-9, table, material=TABN_REFERENCE)
+    reduced = mask3d_six_effects(32e-9, material=TABN_REFERENCE)
+
+    assert summary.best_focus_shift_m == pytest.approx(reduced.best_focus_shift_m)
+
+
+def test_screen_absorber_materials_prefers_lower_lookup_penalty():
+    """Candidate screening uses imported table rows when they are available."""
+    table = Mask3DLookupTable(
+        entries=(
+            _lookup_entry("TaBN reference", 32e-9, best_focus_shift_m=12e-9),
+            _lookup_entry("Ni high-k candidate", 32e-9, best_focus_shift_m=2e-9),
+        ),
+        source="unit-test",
+    )
+
+    rows = screen_absorber_materials(
+        32e-9,
+        [TABN_REFERENCE, NI_HIGH_K],
+        lookup_table=table,
+    )
+
+    assert rows[0].material.name == "Ni high-k candidate"
+    assert rows[0].used_lookup
+    assert rows[0].score < rows[1].score
+
+
+def test_load_mask3d_lookup_json_rejects_empty_entries(tmp_path):
+    """Lookup tables must be explicit so silent empty imports do not pass."""
+    path = tmp_path / "lookup.json"
+    path.write_text(json.dumps({"entries": []}), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="entries"):
+        load_mask3d_lookup_json(path)
+
+
+def test_load_mask3d_lookup_json_reads_pitch_nm_rows(tmp_path):
+    """JSON lookup rows accept nm pitch values for paper table transcription."""
+    path = tmp_path / "lookup.json"
+    path.write_text(
+        json.dumps(
+            {
+                "source": "example",
+                "entries": [
+                    {
+                        "material_name": "TaBN reference",
+                        "pitch_nm": 32.0,
+                        "chief_ray_angle_deg": 6.0,
+                        "orientation": "vertical",
+                        "shadowing_loss_fraction": 0.12,
+                        "orientation_cd_bias_m": 3e-10,
+                        "telecentricity_error_mrad": 8.0,
+                        "contrast_loss_fraction": 0.02,
+                        "best_focus_shift_m": 6e-9,
+                        "secondary_image_fraction": 0.001,
+                        "phase_error_waves": 0.02,
+                    }
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    table = load_mask3d_lookup_json(path)
+
+    assert table.source == "example"
+    assert table.entries[0].pitch_m == pytest.approx(32e-9)
+
+
+def _lookup_entry(
+    material_name: str,
+    pitch_m: float,
+    *,
+    best_focus_shift_m: float = 8e-9,
+) -> Mask3DLookupEntry:
+    return Mask3DLookupEntry(
+        material_name=material_name,
+        pitch_m=pitch_m,
+        chief_ray_angle_deg=6.0,
+        orientation="vertical",
+        shadowing_loss_fraction=0.15,
+        orientation_cd_bias_m=3e-10,
+        telecentricity_error_mrad=8.0,
+        contrast_loss_fraction=0.02,
+        best_focus_shift_m=best_focus_shift_m,
+        secondary_image_fraction=0.001,
+        phase_error_waves=0.02,
+    )

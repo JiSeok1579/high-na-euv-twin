@@ -1,0 +1,58 @@
+{
+  "source": "qualitative-example-not-rigorous",
+  "entries": [
+    {
+      "material_name": "TaBN reference",
+      "pitch_nm": 32.0,
+      "chief_ray_angle_deg": 6.0,
+      "orientation": "vertical",
+      "shadowing_loss_fraction": 0.12,
+      "orientation_cd_bias_m": 4.2e-10,
+      "telecentricity_error_mrad": 16.0,
+      "contrast_loss_fraction": 0.035,
+      "best_focus_shift_m": 8.0e-9,
+      "secondary_image_fraction": 0.0018,
+      "phase_error_waves": 0.028
+    },
+    {
+      "material_name": "TaBN reference",
+      "pitch_nm": 64.0,
+      "chief_ray_angle_deg": 6.0,
+      "orientation": "vertical",
+      "shadowing_loss_fraction": 0.065,
+      "orientation_cd_bias_m": 3.9e-10,
+      "telecentricity_error_mrad": 11.0,
+      "contrast_loss_fraction": 0.022,
+      "best_focus_shift_m": 5.2e-9,
+      "secondary_image_fraction": 0.0011,
+      "phase_error_waves": 0.028
+    },
+    {
+      "material_name": "Ni high-k candidate",
+      "pitch_nm": 32.0,
+      "chief_ray_angle_deg": 6.0,
+      "orientation": "vertical",
+      "shadowing_loss_fraction": 0.075,
+      "orientation_cd_bias_m": 2.2e-10,
+      "telecentricity_error_mrad": 8.0,
+      "contrast_loss_fraction": 0.014,
+      "best_focus_shift_m": 3.1e-9,
+      "secondary_image_fraction": 0.0007,
+      "phase_error_waves": 0.007
+    },
+    {
+      "material_name": "Ni high-k candidate",
+      "pitch_nm": 64.0,
+      "chief_ray_angle_deg": 6.0,
+      "orientation": "vertical",
+      "shadowing_loss_fraction": 0.044,
+      "orientation_cd_bias_m": 2.0e-10,
+      "telecentricity_error_mrad": 5.8,
+      "contrast_loss_fraction": 0.010,
+      "best_focus_shift_m": 2.4e-9,
+      "secondary_image_fraction": 0.0005,
+      "phase_error_waves": 0.007
+    }
+  ],
+  "note": "Example schema only. Values are qualitative placeholders and must be replaced by measured, DDM, RCWA, or other rigorous Mask 3D data before quantitative use."
+}

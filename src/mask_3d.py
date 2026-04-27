@@ -29,6 +29,9 @@ class AbsorberMaterial:
     k: float
     thickness_m: float
     top_reflectivity: float = 0.015
+    source: str = "qualitative-starter"
+    reference: str = ""
+    measured: bool = False
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,42 @@ class BoundaryCorrectionResult:
     secondary_field: np.ndarray
     summary: Mask3DEffectSummary
     ghost_shift_px: int
+
+
+@dataclass(frozen=True)
+class Mask3DLookupEntry:
+    """One imported rigorous or measured Mask 3D effect-table row."""
+
+    material_name: str
+    pitch_m: float
+    chief_ray_angle_deg: float
+    orientation: str
+    shadowing_loss_fraction: float
+    orientation_cd_bias_m: float
+    telecentricity_error_mrad: float
+    contrast_loss_fraction: float
+    best_focus_shift_m: float
+    secondary_image_fraction: float
+    phase_error_waves: float
+    source: str = ""
+
+
+@dataclass(frozen=True)
+class Mask3DLookupTable:
+    """Imported Mask 3D lookup table for replacing reduced proxies."""
+
+    entries: tuple[Mask3DLookupEntry, ...]
+    source: str = ""
+
+
+@dataclass(frozen=True)
+class AbsorberScreeningRow:
+    """Ranked absorber candidate row for qualitative Mask 3D screening."""
+
+    material: AbsorberMaterial
+    summary: Mask3DEffectSummary
+    score: float
+    used_lookup: bool
 
 
 TABN_REFERENCE = AbsorberMaterial(
@@ -131,10 +170,33 @@ def load_absorber_materials_json(path: str | Path) -> tuple[AbsorberMaterial, ..
             k=float(row["k"]),
             thickness_m=thickness_m,
             top_reflectivity=float(row.get("top_reflectivity", 0.015)),
+            source=str(row.get("source", data.get("source", "json"))),
+            reference=str(row.get("reference", "")),
+            measured=bool(row.get("measured", False)),
         )
         _validate_material(material)
         materials.append(material)
     return tuple(materials)
+
+
+def load_mask3d_lookup_json(path: str | Path) -> Mask3DLookupTable:
+    """Load imported Mask 3D effect rows from JSON.
+
+    The table is designed for future rigorous EM, DDM, or measured calibration
+    outputs. Rows may specify `pitch_m` or `pitch_nm`; effect metrics use the
+    same units as `Mask3DEffectSummary`.
+    """
+    data = json.loads(Path(path).read_text(encoding="utf-8"))
+    rows = data.get("entries")
+    if not isinstance(rows, list) or not rows:
+        raise ValueError("lookup JSON must contain a non-empty entries list")
+
+    entries: list[Mask3DLookupEntry] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            raise ValueError("each lookup row must be a JSON object")
+        entries.append(_lookup_entry_from_row(row, source=str(data.get("source", ""))))
+    return Mask3DLookupTable(entries=tuple(entries), source=str(data.get("source", "")))
 
 
 def mask3d_six_effects(
@@ -194,6 +256,52 @@ def mask3d_six_effects(
         best_focus_shift_m=float(best_focus_shift),
         secondary_image_fraction=float(secondary),
         phase_error_waves=float(phase_error_waves),
+    )
+
+
+def lookup_mask3d_six_effects(
+    pitch_m: float,
+    table: Mask3DLookupTable,
+    *,
+    material: AbsorberMaterial = TABN_REFERENCE,
+    chief_ray_angle_deg: float = 6.0,
+    orientation: str = "vertical",
+    absorber_fraction: float = 0.5,
+    fallback_to_reduced: bool = True,
+) -> Mask3DEffectSummary:
+    """Return lookup-refined Mask 3D effects with reduced-model fallback."""
+    _validate_positive(pitch_m, "pitch_m")
+    _validate_material(material)
+    matches = _matching_lookup_entries(
+        table,
+        material_name=material.name,
+        chief_ray_angle_deg=chief_ray_angle_deg,
+        orientation=orientation,
+    )
+    if not matches:
+        if fallback_to_reduced:
+            return mask3d_six_effects(
+                pitch_m,
+                material=material,
+                chief_ray_angle_deg=chief_ray_angle_deg,
+                orientation=orientation,
+                absorber_fraction=absorber_fraction,
+            )
+        raise ValueError("lookup table has no matching material/CRA/orientation rows")
+
+    entry = _interpolate_lookup_entries(pitch_m, matches)
+    return Mask3DEffectSummary(
+        material=material,
+        pitch_m=float(pitch_m),
+        chief_ray_angle_deg=float(chief_ray_angle_deg),
+        orientation=orientation,
+        shadowing_loss_fraction=entry.shadowing_loss_fraction,
+        orientation_cd_bias_m=entry.orientation_cd_bias_m,
+        telecentricity_error_mrad=entry.telecentricity_error_mrad,
+        contrast_loss_fraction=entry.contrast_loss_fraction,
+        best_focus_shift_m=entry.best_focus_shift_m,
+        secondary_image_fraction=entry.secondary_image_fraction,
+        phase_error_waves=entry.phase_error_waves,
     )
 
 
@@ -281,6 +389,58 @@ def boundary_corrected_mask(
     )
 
 
+def screen_absorber_materials(
+    pitch_m: float,
+    materials: Iterable[AbsorberMaterial],
+    *,
+    chief_ray_angle_deg: float = 6.0,
+    orientation: str = "vertical",
+    lookup_table: Mask3DLookupTable | None = None,
+) -> tuple[AbsorberScreeningRow, ...]:
+    """Rank absorber candidates by a reduced Mask 3D penalty score."""
+    library = tuple(materials)
+    if not library:
+        raise ValueError("materials must contain at least one AbsorberMaterial")
+
+    rows: list[AbsorberScreeningRow] = []
+    for material in library:
+        used_lookup = (
+            lookup_table is not None
+            and bool(
+                _matching_lookup_entries(
+                    lookup_table,
+                    material_name=material.name,
+                    chief_ray_angle_deg=chief_ray_angle_deg,
+                    orientation=orientation,
+                )
+            )
+        )
+        if lookup_table is None:
+            summary = mask3d_six_effects(
+                pitch_m,
+                material=material,
+                chief_ray_angle_deg=chief_ray_angle_deg,
+                orientation=orientation,
+            )
+        else:
+            summary = lookup_mask3d_six_effects(
+                pitch_m,
+                lookup_table,
+                material=material,
+                chief_ray_angle_deg=chief_ray_angle_deg,
+                orientation=orientation,
+            )
+        rows.append(
+            AbsorberScreeningRow(
+                material=material,
+                summary=summary,
+                score=_mask3d_penalty_score(summary),
+                used_lookup=used_lookup,
+            )
+        )
+    return tuple(sorted(rows, key=lambda row: row.score))
+
+
 def compare_absorber_materials(
     pitch_m: float,
     materials: Iterable[AbsorberMaterial] | None = None,
@@ -315,11 +475,173 @@ def _validate_material(material: AbsorberMaterial) -> None:
         or not 0.0 <= material.top_reflectivity < 1.0
     ):
         raise ValueError("material.top_reflectivity must be in [0, 1)")
+    if not isinstance(material.source, str):
+        raise ValueError("material.source must be a string")
+    if not isinstance(material.reference, str):
+        raise ValueError("material.reference must be a string")
 
 
 def _validate_positive(value: float, name: str) -> None:
     if not np.isfinite(value) or value <= 0.0:
         raise ValueError(f"{name} must be a positive finite value")
+
+
+def _lookup_entry_from_row(row: dict[str, object], *, source: str) -> Mask3DLookupEntry:
+    if "pitch_m" in row:
+        pitch_m = _required_float(row, "pitch_m")
+    elif "pitch_nm" in row:
+        pitch_m = _required_float(row, "pitch_nm") * 1.0e-9
+    else:
+        raise ValueError("lookup row must include pitch_m or pitch_nm")
+    _validate_positive(pitch_m, "pitch_m")
+
+    orientation = str(row["orientation"])
+    if orientation not in {"vertical", "horizontal"}:
+        raise ValueError("lookup orientation must be 'vertical' or 'horizontal'")
+
+    entry = Mask3DLookupEntry(
+        material_name=str(row["material_name"]),
+        pitch_m=pitch_m,
+        chief_ray_angle_deg=_required_float(row, "chief_ray_angle_deg"),
+        orientation=orientation,
+        shadowing_loss_fraction=_required_float(row, "shadowing_loss_fraction"),
+        orientation_cd_bias_m=_required_float(row, "orientation_cd_bias_m"),
+        telecentricity_error_mrad=_required_float(row, "telecentricity_error_mrad"),
+        contrast_loss_fraction=_required_float(row, "contrast_loss_fraction"),
+        best_focus_shift_m=_required_float(row, "best_focus_shift_m"),
+        secondary_image_fraction=_required_float(row, "secondary_image_fraction"),
+        phase_error_waves=_required_float(row, "phase_error_waves"),
+        source=str(row.get("source", source)),
+    )
+    _validate_lookup_entry(entry)
+    return entry
+
+
+def _validate_lookup_entry(entry: Mask3DLookupEntry) -> None:
+    if not entry.material_name:
+        raise ValueError("lookup material_name must be non-empty")
+    _validate_positive(entry.pitch_m, "lookup pitch_m")
+    if not np.isfinite(entry.chief_ray_angle_deg):
+        raise ValueError("lookup chief_ray_angle_deg must be finite")
+    if entry.orientation not in {"vertical", "horizontal"}:
+        raise ValueError("lookup orientation must be 'vertical' or 'horizontal'")
+    _validate_fraction(entry.shadowing_loss_fraction, "shadowing_loss_fraction")
+    _validate_fraction(entry.contrast_loss_fraction, "contrast_loss_fraction")
+    _validate_fraction(entry.secondary_image_fraction, "secondary_image_fraction")
+    if not np.isfinite(entry.orientation_cd_bias_m):
+        raise ValueError("orientation_cd_bias_m must be finite")
+    if not np.isfinite(entry.telecentricity_error_mrad):
+        raise ValueError("telecentricity_error_mrad must be finite")
+    if not np.isfinite(entry.best_focus_shift_m):
+        raise ValueError("best_focus_shift_m must be finite")
+    if not np.isfinite(entry.phase_error_waves):
+        raise ValueError("phase_error_waves must be finite")
+
+
+def _validate_fraction(value: float, name: str) -> None:
+    if not np.isfinite(value) or not 0.0 <= value < 1.0:
+        raise ValueError(f"{name} must be finite and in [0, 1)")
+
+
+def _required_float(row: dict[str, object], name: str) -> float:
+    value = row.get(name)
+    if not isinstance(value, str | int | float):
+        raise ValueError(f"{name} must be a numeric value")
+    return float(value)
+
+
+def _matching_lookup_entries(
+    table: Mask3DLookupTable,
+    *,
+    material_name: str,
+    chief_ray_angle_deg: float,
+    orientation: str,
+) -> tuple[Mask3DLookupEntry, ...]:
+    if not table.entries:
+        raise ValueError("lookup table must contain at least one entry")
+    requested_angle = abs(float(chief_ray_angle_deg))
+    matches = [
+        entry
+        for entry in table.entries
+        if entry.material_name == material_name
+        and entry.orientation == orientation
+        and math.isclose(abs(entry.chief_ray_angle_deg), requested_angle, abs_tol=1.0e-9)
+    ]
+    return tuple(sorted(matches, key=lambda entry: entry.pitch_m))
+
+
+def _interpolate_lookup_entries(
+    pitch_m: float,
+    entries: tuple[Mask3DLookupEntry, ...],
+) -> Mask3DLookupEntry:
+    if len(entries) == 1 or pitch_m <= entries[0].pitch_m:
+        return entries[0]
+    if pitch_m >= entries[-1].pitch_m:
+        return entries[-1]
+
+    for lower, upper in zip(entries, entries[1:], strict=True):
+        if lower.pitch_m <= pitch_m <= upper.pitch_m:
+            if math.isclose(lower.pitch_m, upper.pitch_m):
+                return lower
+            weight = (pitch_m - lower.pitch_m) / (upper.pitch_m - lower.pitch_m)
+            return Mask3DLookupEntry(
+                material_name=lower.material_name,
+                pitch_m=float(pitch_m),
+                chief_ray_angle_deg=lower.chief_ray_angle_deg,
+                orientation=lower.orientation,
+                shadowing_loss_fraction=_lerp(
+                    lower.shadowing_loss_fraction,
+                    upper.shadowing_loss_fraction,
+                    weight,
+                ),
+                orientation_cd_bias_m=_lerp(
+                    lower.orientation_cd_bias_m,
+                    upper.orientation_cd_bias_m,
+                    weight,
+                ),
+                telecentricity_error_mrad=_lerp(
+                    lower.telecentricity_error_mrad,
+                    upper.telecentricity_error_mrad,
+                    weight,
+                ),
+                contrast_loss_fraction=_lerp(
+                    lower.contrast_loss_fraction,
+                    upper.contrast_loss_fraction,
+                    weight,
+                ),
+                best_focus_shift_m=_lerp(
+                    lower.best_focus_shift_m,
+                    upper.best_focus_shift_m,
+                    weight,
+                ),
+                secondary_image_fraction=_lerp(
+                    lower.secondary_image_fraction,
+                    upper.secondary_image_fraction,
+                    weight,
+                ),
+                phase_error_waves=_lerp(
+                    lower.phase_error_waves,
+                    upper.phase_error_waves,
+                    weight,
+                ),
+                source=lower.source or upper.source,
+            )
+    return entries[-1]
+
+
+def _lerp(lower: float, upper: float, weight: float) -> float:
+    return float((1.0 - weight) * lower + weight * upper)
+
+
+def _mask3d_penalty_score(summary: Mask3DEffectSummary) -> float:
+    return float(
+        summary.shadowing_loss_fraction
+        + summary.contrast_loss_fraction
+        + summary.secondary_image_fraction
+        + abs(summary.telecentricity_error_mrad) / 100.0
+        + abs(summary.best_focus_shift_m) / 50.0e-9
+        + abs(summary.orientation_cd_bias_m) / max(summary.pitch_m, np.finfo(float).eps)
+    )
 
 
 def _as_absorber_mask(pattern: np.ndarray, expected_shape: tuple[int, int]) -> np.ndarray:
