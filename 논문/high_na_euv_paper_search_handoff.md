@@ -1,5 +1,5 @@
 # 논문 탐색 인수인계 지시서  
-## High-NA EUV Lithography Digital Twin / Simulator Project
+## High-NA EUV Lithography Simulator / Simulator Project
 
 작성 목적: 이 문서는 본 프로젝트를 처음 인수받은 연구자가 **어떤 프로젝트를 만들려고 하는지 이해하고**, 그 프로젝트에 필요한 논문을 **어떤 방향으로 찾아야 하는지** 안내하기 위한 지시서이다.
 
@@ -8,7 +8,7 @@
 ## 1. 프로젝트 개요
 
 본 프로젝트의 목표는 실제 High-NA EUV Lithography Machine을 제작하거나 복제하는 것이 아니다.  
-목표는 다음과 같은 **연구/교육/시뮬레이션용 디지털 트윈**을 구축하는 것이다.
+목표는 다음과 같은 **연구/교육/시뮬레이션용 시뮬레이터**을 구축하는 것이다.
 
 > EUV 광원이 생성한 13.5 nm 빛이 source vessel, collector, illuminator, reflective mask, projection mirror cascade를 지나 wafer에 도달할 때, 회절·반사·수차·마스크 3D 효과·웨이퍼 topography·defocus·photoresist 반응에 의해 최종 패턴이 어떻게 형성되고 왜곡되는지 계산하는 소프트웨어 모델
 

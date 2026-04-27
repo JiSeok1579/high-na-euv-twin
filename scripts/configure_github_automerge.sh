@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="${1:-${GITHUB_REPOSITORY:-JiSeok1579/high-na-euv-twin}}"
+REPO="${1:-${GITHUB_REPOSITORY:-JiSeok1579/high-na-euv-sim}}"
 BRANCH="${BRANCH:-main}"
 AUTO_MERGE_LABEL="${AUTO_MERGE_LABEL:-auto-merge}"
 REQUIRED_CONTEXTS_JSON="${REQUIRED_CONTEXTS_JSON:-[\"pytest + mypy + ruff\",\"clear merge title\"]}"

@@ -1,4 +1,4 @@
-# High-NA EUV Digital Twin — 통합 학습 문서
+# High-NA EUV Simulator — 통합 학습 문서
 
 > 21편 논문 + 워크스페이스 문서(`high_na_euv_physics_considerations.md`, `high_na_euv_paper_search_handoff.md`) 를 프로젝트 맥락에서 통합 정리
 > 작성일: 2026-04-25
@@ -7,7 +7,7 @@
 
 ## 0. 프로젝트 한 줄 정의
 
-**13.5 nm EUV 빛이 source → collector → illuminator → reflective mask → 6-mirror anamorphic projection → wafer를 거쳐 형성되는 aerial image와 printed pattern을 Fourier optics + ray tracing + mask 3D + resist 모델로 근사하는 디지털 트윈 시뮬레이터.**
+**13.5 nm EUV 빛이 source → collector → illuminator → reflective mask → 6-mirror anamorphic projection → wafer를 거쳐 형성되는 aerial image와 printed pattern을 Fourier optics + ray tracing + mask 3D + resist 모델로 근사하는 시뮬레이터.**
 
 목적은 장비 복제가 아니라 **회절·반사·수차·M3D·topography·resist의 상호작용을 코드로 재현**하는 것이며, 결국 OPC/ILT/SMO 보정의 design space를 탐색하는 것이다.
 
@@ -349,7 +349,7 @@ high_na_euv_sim/
 ## 9. 한 페이지 요약 (cheat sheet)
 
 ```text
-WHAT  : 0.55 NA EUV digital twin simulator
+WHAT  : 0.55 NA EUV simulator simulator
 WHY   : aerial image, M3D, DOF, stochastic, OPC/ILT/SMO 통합 design space 탐색
 WHERE : 6 Phase, 21편 논문, 13개 모듈
 

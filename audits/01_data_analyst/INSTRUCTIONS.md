@@ -1,7 +1,7 @@
 # 데이터 분석가 감사 지시서
 ## Data Analyst Audit Instructions
 
-> 본 문서는 High-NA EUV Digital Twin 프로젝트에서 **데이터 입력·전처리·EDA·분포·재현성**을 감사하는 역할의 헌법이다.
+> 본 문서는 High-NA EUV Simulator 프로젝트에서 **데이터 입력·전처리·EDA·분포·재현성**을 감사하는 역할의 헌법이다.
 > Phase에 종속되지 않고 동일한 기준으로 모든 단계의 데이터 흐름을 검열한다.
 
 ---
