@@ -1,41 +1,32 @@
-Unraveling the relative impact of material and optical stochastic effects.
+High-NA EUV Reference Paper List
+================================
 
-SHARP High numerical aperture Actinic Reticle review Project.
-
-High-NA In-Line Projector for EUV Lithography.
-
-Fundamental aspects of Photosensitized chemically amplified resist (PSCAR) and CAR: How to overcome RLS trade-off and photon shot noise problems.
-
-0.55 NA EUV lithography: Imaging & Overlay.
-
-Contrast improvement and dose reduction for High-NA EUV DRAM.
-
-Novel high-k mask considering M3D effects & focus control.
-
-EUV spectrum of high power LPP source.
-
-A fast SMO method for high-NA EUV lithography imaging model.
-
-Pupil, mask, wavefront co-optimization for enhanced EUV patterning: reducing LWR and evaluating overlay.
-
-The next step in Moore's Law: High NA EUV first imaging results.
-
-Characterization and Mitigation of 3D Mask Effects in EUV Lithography.
-
-Measurement and adjustment of resist SWA in EUV lithography.
-
-High-NA EUV imaging in action: tackling the depth-of-focus challenge for superior resolution and LCDU.
-
-Performance of optics with central obscuration.
-
-Design method for a high transmission relay system and a matching method for double facets using deep RL.
-
-Mitigating best focus shift in high-NA EUV lithography via optical constant screening.
-
-Physics of laser-driven tin plasma sources of EUV radiation for nanolithography.
-
-Anamorphic high-NA EUV lithography optics.
-
-Understanding the impact of the EUV photon absorption distribution in 0.55 NA EUV.
-
-Statistics of EUV exposed nanopatterns.
+1. Unraveling the relative impact of material and optical stochastic effects.
+2. SHARP high numerical-aperture actinic reticle review project.
+3. High-NA in-line projector for EUV lithography.
+4. Fundamental aspects of photosensitized chemically amplified resist (PSCAR)
+   and chemically amplified resist (CAR): how to overcome the RLS trade-off
+   and photon shot-noise problems.
+5. 0.55 NA EUV lithography: imaging and overlay.
+6. Contrast improvement and dose reduction for High-NA EUV DRAM.
+7. Novel high-k mask considering Mask 3D effects and focus control.
+8. EUV spectrum of a high-power laser-produced plasma source.
+9. A fast SMO method for a High-NA EUV lithography imaging model.
+10. Pupil, mask, and wavefront co-optimization for enhanced EUV patterning:
+    reducing LWR and evaluating overlay.
+11. The next step in Moore's Law: High-NA EUV first imaging results.
+12. Characterization and mitigation of 3D mask effects in EUV lithography.
+13. Measurement and adjustment of resist sidewall angle in EUV lithography.
+14. High-NA EUV imaging in action: tackling the depth-of-focus challenge for
+    superior resolution and LCDU.
+15. Performance of optics with central obscuration.
+16. Design method for a high-transmission relay system and a matching method
+    for double facets using deep reinforcement learning.
+17. Mitigating best-focus shift in High-NA EUV lithography via optical-constant
+    screening.
+18. Physics of laser-driven tin plasma sources of EUV radiation for
+    nanolithography.
+19. Anamorphic High-NA EUV lithography optics.
+20. Understanding the impact of the EUV photon absorption distribution in
+    0.55 NA EUV.
+21. Statistics of EUV-exposed nanopatterns.

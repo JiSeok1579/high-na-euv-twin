@@ -5,7 +5,7 @@ the source -> illumination -> reflective mask -> anamorphic projection -> wafer
 -> resist path with reduced Fourier optics, depth-of-focus, Mask 3D, and
 photoresist models.
 
-## Study Purpose / 스터디 목적
+## Study Purpose
 
 This is a **study-purpose simulator**, not a paper, report, or industry
 deployment tool. Goals:
@@ -24,16 +24,9 @@ deployment tool. Goals:
 - Industry-grade quantitative validation. Data and paper sources are
   inconsistent, so strict industrial validation is out of scope.
 
-본 프로젝트는 **스터디 목적의 시뮬레이터**입니다. 데이터·논문 출처가
-일관되지 않으므로 정량적 산업 검증은 범위 밖이며, 다음을 정성적으로 학습합니다:
-
-1. 시뮬레이션을 만들어서 작동시키기: Build.
-2. 결과를 3D로 시각화하여 구조와 흐름 보기: Visualize.
-3. 좋은 결과가 무엇인지 정성 파악하고, 입력 미세조정이 출력에 미치는 영향 학습:
-   Understand and fine-tune.
-
-**엄격한 산업 정량 검증은 추구하지 않습니다.** 일단 구현 -> 결과 확인
--> 미세조정 -> 활용 학습이 핵심입니다.
+Strict industrial quantitative validation is intentionally not pursued. The
+primary workflow is implementation, result inspection, parameter tuning, and
+qualitative learning.
 
 ## Quick Start
 
@@ -68,7 +61,7 @@ jupyter lab notebooks/0_first_aerial_image.ipynb
 ## Main References
 
 - `PROJECT_OVERVIEW.md` - project inventory, roadmap, and operating context.
-- `진행계획서.md` - phase plan, KPIs, WBS, and risk register.
+- Project execution plan - phase plan, KPIs, WBS, and risk register.
 - `docs/phase2_illumination_design.md` - Phase 2 source-shape and partial-coherence model.
 - `docs/phase4_M3D_design.md` - Phase 4 Mask 3D boundary, lookup import, and aerial-regression model.
 - `docs/phase5_resist_models.md` - Phase 5 resist model stack.
