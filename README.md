@@ -45,7 +45,7 @@ jupyter lab notebooks/0_first_aerial_image.ipynb
 | 3 | Wafer topography and DOF | Complete through k2 fitting |
 | 4 | Mask 3D effects | Part 04: rigorous-data import and aerial regression hooks |
 | 5 | Photoresist: threshold, blur, depth, stochastic | Complete through calibration exit gates |
-| 6 | SMO / PMWO / OPC / ILT | Pending |
+| 6 | SMO / PMWO / OPC / ILT | Part 01: SMO grid-search MVP with source and LWR objective |
 
 ## Notebook Demos
 
@@ -57,6 +57,7 @@ jupyter lab notebooks/0_first_aerial_image.ipynb
 - `notebooks/3_M3D_effects.ipynb`
 - `notebooks/4a_threshold_resist.ipynb`
 - `notebooks/4b_resist_levels.ipynb`
+- `notebooks/5_SMO_PMWO.ipynb`
 
 ## Main References
 
@@ -65,6 +66,7 @@ jupyter lab notebooks/0_first_aerial_image.ipynb
 - `docs/phase2_illumination_design.md` - Phase 2 source-shape and partial-coherence model.
 - `docs/phase4_M3D_design.md` - Phase 4 Mask 3D boundary, lookup import, and aerial-regression model.
 - `docs/phase5_resist_models.md` - Phase 5 resist model stack.
+- `docs/phase6_optimization_design.md` - Phase 6 SMO objective and grid-search MVP.
 - `docs/study_grade_relaxation.md` - study-purpose strictness and audit severity policy.
 - `docs/github_claude_automerge_setup.md` - GitHub automation setup.
 - `audits/AUDIT_LOG.md` - audit and mitigation task tracking.
