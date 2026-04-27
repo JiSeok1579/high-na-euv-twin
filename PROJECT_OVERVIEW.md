@@ -287,6 +287,8 @@ resist: threshold
 - ✅ `docs/phase4_M3D_design.md` — Phase 4 reduced Mask 3D boundary correction, lookup import, and aerial-regression limits
 - ✅ `docs/phase2_illumination_design.md` — Phase 2 source-shape and partial-coherence study-grade model
 - ✅ `docs/phase6_optimization_design.md` — Phase 6 SMO/PMWO/OPC/ILT objective, OPC candidates, contour EPE maps, and simplifications
+- ✅ `docs/getting_started.md` — first-time GitHub user setup, first run, notebook path, and troubleshooting
+- ✅ `docs/3d_implementation_guide.md` — 3D notebook implementation patterns, extension checklist, and headless validation commands
 - ✅ `docs/study_grade_relaxation.md` — study-purpose strictness and audit severity policy
 - ⏳ `docs/` (Phase 6 API/refinement) — final report, API extraction, and external validation docs
 
@@ -548,5 +550,9 @@ MVP 3편:           #19 (좌표) + #9 ★OA (SMO 구현 가이드) + #12 (M3D �
   - Added `src/opc.py` with assist-feature masks, arbitrary OPC mask evaluation, and pixel-level ILT refinement.
   - Added `tests/phase6_opc.py` and expanded `notebooks/5_SMO_PMWO.ipynb`.
   - Added a remaining-work checklist and updated Phase 6 docs to record the Part 04 simplifications and verification scope.
+- **2026-04-27** GitHub onboarding and 3D usage documentation expanded.
+  - Rebuilt `README.md` as a first-time-user router with install, validation, notebook, 3D, and document links.
+  - Added `docs/getting_started.md` and `docs/3d_implementation_guide.md`.
+  - Documented how to execute 3D notebooks and how to add new 3D visualizations.
 
 > 새 논문 추가 / Phase 진행 / 코드 모듈 추가 시 본 문서의 §2(인벤토리), §5(로드맵), §6(산출물)을 동시 업데이트할 것.
