@@ -84,6 +84,27 @@ The repository includes:
   fields. All current rows are marked `measured=false`.
 - `data/mask3d_lookup/qualitative_example.json`: schema example only, explicitly
   not rigorous data.
+- `data/mask3d_lookup/rigorous_import_template.csv`: header-only CSV template
+  for RCWA/DDM/measured rows.
+
+## Part 04 Rigorous-Data Import and Aerial Regression
+
+Part 04 does not add fake rigorous numbers. It adds the plumbing needed to
+replace qualitative rows safely once RCWA, DDM, or measured mask data exists.
+
+`load_mask3d_lookup_csv(...)` imports external solver rows using explicit unit
+columns. Pitch, orientation CD bias, and best-focus shift may be supplied in
+meters or nanometers. Empty files fail closed.
+
+`lookup_boundary_corrected_mask(...)` drives the Part 02 complex-field boundary
+correction from imported lookup rows. This makes the field path data-driven:
+when a matching rigorous row exists, it overrides the reduced CRA proxy; when it
+does not, the caller can choose reduced-model fallback or fail.
+
+`compare_mask3d_aerial_images(...)` and `lookup_mask3d_aerial_regression(...)`
+provide the first aerial-image regression gate. They normalize predicted and
+reference aerial images, compute RMSE, mean absolute error, and max absolute
+error, and expose a boolean pass/fail status against explicit tolerances.
 
 ## Simplifications
 
@@ -94,6 +115,7 @@ The repository includes:
 | P4-L3 | Every effect scales to zero at zero CRA. | Useful for paper #3 in-line mitigation check but incomplete for phase-only stack effects. | Separate angle and stack-cavity terms. |
 | P4-L4 | Secondary images use a shifted top-reflectivity proxy. | Ghost images are field-level but not physically propagated reflected paths. | Field-level reflected-path model. |
 | P4-L5 | Lookup-table example rows are qualitative placeholders. | Demonstrates schema and interpolation only. | Replace with DDM, RCWA, or measured Mask 3D table rows. |
+| P4-L6 | Aerial regression currently compares imported references but does not generate them. | Quantitative accuracy depends entirely on supplied external rigorous images. | Add RCWA/DDM export fixtures or measured actinic aerial references. |
 
 ## Verification
 
@@ -113,10 +135,14 @@ unit tests:
 - Lookup rows interpolate by pitch and fall back to the reduced model when
   missing.
 - Absorber screening prefers candidates with lower lookup-refined penalties.
+- CSV lookup imports accept explicit nanometer columns.
+- Lookup-driven boundary correction can override the reduced CRA proxy.
+- Aerial-image regression gates imported references with RMSE and max-error
+  tolerances.
 
 ## Exit State
 
-Part 03 adds the data-replacement and lookup-table path needed for later
-quantitative refinement. KPI K4 remains a reduced-model pass: six-effect
-behavior, field interfaces, and lookup plumbing are covered, but rigorous Mask
-3D accuracy remains future work.
+Part 04 adds the import and regression path needed for later quantitative
+refinement. KPI K4 remains a reduced-model pass until real RCWA/DDM/measured
+rows are supplied, but the simulator now has a closed path for importing those
+rows, applying them to the field model, and gating aerial-image agreement.

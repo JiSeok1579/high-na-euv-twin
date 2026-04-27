@@ -2,7 +2,7 @@
 
 Phase 1 - Scalar Fourier Optics MVP.
 Phase 3 - Defocus sign convention and DOF groundwork.
-Phase 4 - Reduced Mask 3D stubs, boundary fields, and lookup hooks.
+Phase 4 - Mask 3D lookup imports, boundary fields, and aerial regression hooks.
 Phase 5 - Resist metrics, stochastic LWR, and calibration helpers.
 """
 
