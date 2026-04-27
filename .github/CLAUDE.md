@@ -1,4 +1,4 @@
-# Project: High-NA EUV Lithography Digital Twin
+# Project: High-NA EUV Lithography Simulator
 
 ## Role
 
@@ -117,7 +117,8 @@ Dependabot titles of the form `build(deps): bump ...` are acceptable.
 - Preserve type hints and NumPy-style docstrings for public APIs.
 - Any new `src/` module needs focused unit tests.
 - Record every simplification in code/docstrings and the relevant docs.
-- Keep reports in Korean or Korean + English keywords; keep code comments in English.
+- Write new audit reports, docs, PR summaries, and code comments in English unless
+  a source document explicitly requires Korean wording.
 
 ## Phase Gate Requirements
 

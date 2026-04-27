@@ -1,41 +1,48 @@
-# High-NA EUV Lithography Digital Twin
+# High-NA EUV Lithography Simulator
 
-> 0.55 NA EUV 리소그래피의 광원 → 조명 → 반사형 마스크 → 6-mirror anamorphic projection → wafer → resist 흐름을 Fourier optics + ray tracing + mask 3D + photoresist 모델로 근사하는 연구·교육용 디지털 트윈 시뮬레이터.
+Research and education simulator for 0.55 NA EUV lithography. The code follows
+the source -> illumination -> reflective mask -> anamorphic projection -> wafer
+-> resist path with reduced Fourier optics, depth-of-focus, Mask 3D, and
+photoresist models.
 
-## 빠른 시작
+## Quick Start
 
 ```bash
-# 환경
-python -m pip install numpy scipy matplotlib pytest
-
-# 단위 테스트
+python -m pip install -r requirements-dev.txt
 pytest tests/ -v
-
-# 첫 노트북
 jupyter lab notebooks/0_first_aerial_image.ipynb
 ```
 
-## 진행 상태
+## Current Status
 
-| Phase | 내용 | 상태 |
-|-------|------|------|
-| 1 | Scalar Fourier optics MVP — pupil + mask + aerial | ✅ 완료 (2026-04-26) |
-| 2 | Partial coherence / illuminator | ⏳ 대기 |
-| 3 | Wafer topography & DOF | ⏳ 다음 |
-| 4 | Mask 3D effects | ⏳ 대기 |
-| 5 | Photoresist (threshold → blur → depth → stochastic) | ⏳ 대기 |
-| 6 | SMO / PMWO / OPC / ILT | ⏳ 대기 |
+| Phase | Scope | Status |
+|---|---|---|
+| 1 | Scalar Fourier optics MVP: pupil, mask, aerial image | Complete |
+| 2 | Partial coherence / illuminator | Pending |
+| 3 | Wafer topography and DOF | Complete through k2 fitting |
+| 4 | Mask 3D effects | Started: paper #12 six-effect stub |
+| 5 | Photoresist: threshold, blur, depth, stochastic | Complete through calibration exit gates |
+| 6 | SMO / PMWO / OPC / ILT | Pending |
 
-## 문서 진입점
+## Notebook Demos
 
-- [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) — 단일 진입점, 인벤토리, 로드맵
-- [진행계획서.md](진행계획서.md) — 6 Phase + KPI + WBS + 위험 등록부
-- [docs/phase1_design.md](docs/phase1_design.md) — Phase 1 설계 결정 + 단순화 명시
-- [docs/github_claude_automerge_setup.md](docs/github_claude_automerge_setup.md) — GitHub + Claude Code 자동화 셋업
-- [audits/README.md](audits/README.md) — 4-역할 gated review 시스템
-- [high_na_euv_physics_considerations.md](high_na_euv_physics_considerations.md) — 82-section 물리 핸드북
-- [논문/papers/KNOWLEDGE.md](논문/papers/KNOWLEDGE.md) — 21편 논문 통합 학습
+- `notebooks/0_first_aerial_image.ipynb`
+- `notebooks/3d_focus_stack.ipynb`
+- `notebooks/3d_pupil_wavefront.ipynb`
+- `notebooks/3d_resist_depth.ipynb`
+- `notebooks/3_M3D_effects.ipynb`
+- `notebooks/4a_threshold_resist.ipynb`
+- `notebooks/4b_resist_levels.ipynb`
 
-## 라이선스
+## Main References
 
-연구·교육용. 상업적 사용은 별도 협의.
+- `PROJECT_OVERVIEW.md` - project inventory, roadmap, and operating context.
+- `진행계획서.md` - phase plan, KPIs, WBS, and risk register.
+- `docs/phase4_M3D_design.md` - Phase 4 reduced Mask 3D model.
+- `docs/phase5_resist_models.md` - Phase 5 resist model stack.
+- `docs/github_claude_automerge_setup.md` - GitHub automation setup.
+- `audits/AUDIT_LOG.md` - audit and mitigation task tracking.
+
+## License
+
+Research and education use. Commercial use requires separate agreement.

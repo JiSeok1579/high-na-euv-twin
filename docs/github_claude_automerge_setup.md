@@ -1,6 +1,6 @@
 # GitHub + Claude Code 자동 머지 셋업 가이드
 
-> 대상 리포지터리: **https://github.com/JiSeok1579/high-na-euv-twin**
+> 대상 리포지터리: **https://github.com/JiSeok1579/high-na-euv-sim**
 > 목적: 코드 변경 → CI 통과 → Claude Code 검토 + 4-역할 감사 → 자동 머지 → main 진행
 > 본 문서는 한 번 따라 하면 끝까지 작동하도록 작성된 셋업 매뉴얼이다.
 > 작성일: 2026-04-26
@@ -66,13 +66,13 @@ gh auth login
 
 1. https://console.anthropic.com 로그인
 2. 좌측 메뉴 **API Keys** → **Create Key**
-3. 이름: `github-actions-high-na-euv-twin`
+3. 이름: `github-actions-high-na-euv-sim`
 4. 생성된 키를 **임시로 복사** (한 번만 보임, `sk-ant-api03-...`)
 
 ### 2.2 GitHub Secret 등록
 
 웹 UI:
-1. https://github.com/JiSeok1579/high-na-euv-twin/settings/secrets/actions
+1. https://github.com/JiSeok1579/high-na-euv-sim/settings/secrets/actions
 2. **New repository secret**
 3. Name: `ANTHROPIC_API_KEY`
 4. Secret: 위에서 복사한 값
@@ -81,7 +81,7 @@ gh auth login
 CLI 대안:
 ```bash
 gh secret set ANTHROPIC_API_KEY \
-  --repo JiSeok1579/high-na-euv-twin \
+  --repo JiSeok1579/high-na-euv-sim \
   --body "sk-ant-api03-..."
 ```
 
@@ -97,7 +97,7 @@ GitHub Actions workflow 파일(`.github/workflows/*.yml`)을 바꾸는 PR은 기
 
 ```bash
 gh secret set AUTOMERGE_TOKEN \
-  --repo JiSeok1579/high-na-euv-twin \
+  --repo JiSeok1579/high-na-euv-sim \
   --body "<token-with-workflow-scope>"
 ```
 
@@ -111,7 +111,7 @@ gh secret set AUTOMERGE_TOKEN \
 
 로컬에서:
 ```bash
-cd "/Users/yangjiseok/Desktop/High-NA EUV Lithography Digital Twin"
+cd "/Users/yangjiseok/Desktop/High-NA EUV Lithography Simulator"
 mkdir -p .github/workflows
 ```
 
@@ -389,7 +389,7 @@ jobs:
 Claude Code가 PR을 검토할 때 본 프로젝트의 **감사 시스템**과 **Phase 정책**을 알도록 시스템 프롬프트를 주입한다.
 
 ```markdown
-# Project: High-NA EUV Lithography Digital Twin
+# Project: High-NA EUV Lithography Simulator
 
 ## 너의 역할 (in this repo)
 
@@ -637,7 +637,7 @@ PROJECT_OVERVIEW.md  @JiSeok1579
 ### 7.1 Branch protection rule
 
 웹 UI:
-1. https://github.com/JiSeok1579/high-na-euv-twin/settings/branches
+1. https://github.com/JiSeok1579/high-na-euv-sim/settings/branches
 2. **Add classic branch protection rule** 또는 **Add rule**
 3. Branch name pattern: `main`
 4. 다음을 체크:
@@ -658,7 +658,7 @@ PROJECT_OVERVIEW.md  @JiSeok1579
 CLI 대안 (`gh api`):
 ```bash
 gh api -X PUT \
-  /repos/JiSeok1579/high-na-euv-twin/branches/main/protection \
+  /repos/JiSeok1579/high-na-euv-sim/branches/main/protection \
   --input - <<'EOF'
 {
   "required_status_checks": {
@@ -682,7 +682,7 @@ EOF
 ### 7.2 Auto-merge 활성화
 
 웹 UI:
-1. https://github.com/JiSeok1579/high-na-euv-twin/settings
+1. https://github.com/JiSeok1579/high-na-euv-sim/settings
 2. **General** 페이지 스크롤 → **Pull Requests**
 3. ✅ **Allow auto-merge**
 4. (옵션) ✅ **Automatically delete head branches** (머지 후 브랜치 자동 삭제)
@@ -696,14 +696,14 @@ EOF
 로컬에서 다음 스크립트를 실행하면 repository setting, 라벨, branch protection을 한 번에 적용한다.
 
 ```bash
-scripts/configure_github_automerge.sh JiSeok1579/high-na-euv-twin
+scripts/configure_github_automerge.sh JiSeok1579/high-na-euv-sim
 ```
 
 기본 required check context는 `["pytest + mypy + ruff","clear merge title"]` 이다. Claude check까지 required status로 강제하려면 워크플로가 한 번 실행되어 check 이름이 보인 뒤 아래처럼 실행한다.
 
 ```bash
 REQUIRED_CONTEXTS_JSON='["pytest + mypy + ruff","clear merge title","claude"]' \
-  scripts/configure_github_automerge.sh JiSeok1579/high-na-euv-twin
+  scripts/configure_github_automerge.sh JiSeok1579/high-na-euv-sim
 ```
 
 스크립트는 `auto-merge`, `blocked`, `audit` 라벨을 생성/갱신하고, `main`에 다음 보호 규칙을 적용한다.
@@ -720,7 +720,7 @@ REQUIRED_CONTEXTS_JSON='["pytest + mypy + ruff","clear merge title","claude"]' \
 ```bash
 REQUIRED_APPROVING_REVIEW_COUNT=1 \
 REQUIRE_CODE_OWNER_REVIEWS=true \
-  scripts/configure_github_automerge.sh JiSeok1579/high-na-euv-twin
+  scripts/configure_github_automerge.sh JiSeok1579/high-na-euv-sim
 ```
 
 ---
@@ -730,13 +730,13 @@ REQUIRE_CODE_OWNER_REVIEWS=true \
 ### 8.1 로컬 git 초기화 + 원격 연결
 
 ```bash
-cd "/Users/yangjiseok/Desktop/High-NA EUV Lithography Digital Twin"
+cd "/Users/yangjiseok/Desktop/High-NA EUV Lithography Simulator"
 
 # 이미 git 저장소가 아니라면
 git init -b main
 
 # 원격 추가
-git remote add origin https://github.com/JiSeok1579/high-na-euv-twin.git
+git remote add origin https://github.com/JiSeok1579/high-na-euv-sim.git
 
 # GitHub에서 README/license를 만들어 두었다면 먼저 받기
 git pull origin main --allow-unrelated-histories

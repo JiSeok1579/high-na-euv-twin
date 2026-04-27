@@ -19,6 +19,8 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-27 | Phase 4 + meta | implementation | MT-015/016 closure + Phase 4 paper #12 six-effect stub | 🟢 PASS | [docs/phase4_M3D_design.md](../docs/phase4_M3D_design.md) | Simulator rebrand, `.github/CLAUDE.md` v2.1 English-first sync, Tier 1 matplotlib 3D notebooks, `src/mask_3d.py`, absorber starter data, and 9 Phase 4 Mask 3D tests. 73/73 tests PASS |
+| 2026-04-26 | Phase 5 | external (DS) | EXT-AUD-005 Full Resist Chain (자동 트리거 v2.1) | 🟡 PASS w/ 1 P0 (rebrand) | [00_FINAL_audit.md](external/reports/EXT-AUD-2026-04-26-005_phase5_full_resist_chain/00_FINAL_audit.md) | **본 프로젝트 단일 최대 진척 외부 검증**: 4-level resist + KPI K1 진정 100% + K6 70% + k₂ fitting closed. 64/64 tests PASS. user-directed legacy-name-to-Simulator rebrand + 3D 시각화 Tier 1 권고 instruction sheet 포함. MT-015~018 등록 |
 | 2026-04-26 | Phase 5 | implementation | Phase 5 complete calibration + K6 exit | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | L1 LWR, L2 SWA, L3 stochastic LWR measured-input calibration hooks 추가. K6 exit 상태 반영. 64/64 tests PASS |
 | 2026-04-26 | Phase 5 | implementation | Phase 5 L3 Part 02 MC convergence gate | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | `monte_carlo_convergence_gate` 추가. 100/300/1000 trial LWR stability, tight tolerance fail, gate input validation 검증. 61/61 tests PASS |
 | 2026-04-26 | Phase 5 | implementation | Phase 5 L3 Part 01 stochastic LWR MVP | 🟢 PASS | [docs/phase5_resist_models.md](../docs/phase5_resist_models.md) | `resist_stochastic.py`, `tests/phase5_stochastic.py` 추가. stochastic chain, seeded MC CD/LWR/LCDU, optical/material/cross budget 검증. 58/58 tests PASS |
@@ -46,21 +48,27 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           21
-PASS:                19
-PASS WITH P0:        2
+총 감사 수:           23
+PASS:                20
+PASS WITH P0:        3 (EXT-AUD-001/004/005)
 CAUTION:             0
 MAJOR RISK:          0
 PHYSICAL VIOLATION:  0
 UNVERIFIED:          0
 
-추세 (4-point established: EXT-AUD-001 → 002 → 003 → 004):
+본 PR (EXT-AUD-005) 단일 최대 진척:
+  Phase 5 4-level 완성 + KPI K1 진정 100% + K6 70% + k₂ fitting (MT-012)
+  paper #1 smile + paper #21 chain 정확 재현
+  tests 20→64 (+220% 단일 PR), KPI 평균 +15%
+  사용자 명시 지시 (rebrand + 3D) instruction sheet 제공
+
+추세 (5-point established: EXT-AUD-001 → 002 → 003 → 004 → 005):
   위험 지수 가중 합계:  32.9 → 7.2 → 5.5 → 20.2 (메타 sync 시 spike 패턴)
   P0 개수:             1 → 0 → 0 → 1 → 0 (MT-011 처리)
   P1 개수:             6 → 2 → 0 → 3 → 1 → 0 (MT-012 처리)
   Mitigation 처리율 (누적): — → 86% → 100% → 100% → 93% → 100% (14/14)
-  단위 테스트 수:       5 → 9 → 14 → 20 → 25 → 32 → 38 → 42 → 48 → 52 → 58 → 61 → 64 (+1180% 누적) ★
-  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 → 25/25 → 32/32 → 38/38 → 42/42 → 48/48 → 52/52 → 58/58 → 61/61 → 64/64 (100% 유지)
+  단위 테스트 수:       5 → 9 → 14 → 20 → 25 → 32 → 38 → 42 → 48 → 52 → 58 → 61 → 64 → 73 (+1360% 누적) ★
+  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 → 25/25 → 32/32 → 38/38 → 42/42 → 48/48 → 52/52 → 58/58 → 61/61 → 64/64 → 73/73 (100% 유지)
   KPI K3 (DOF 정량):   0% → 0% → enabled → 50% → 100% ★
   KPI K1 (end-to-end): optical only → full MVP ★
   KPI 평균 진척률:      33% → 33% → 33%+ → 42% → 50% → 58% → 61% → 63% → 65% → 67% → 70% → 72% → 75%
@@ -80,7 +88,9 @@ UNVERIFIED:          0
 
 | ID | 생성일 | 등급 | 내용 | 데드라인 | 출처 |
 |----|--------|------|------|----------|------|
-| (없음) | | | | | |
+| MT-019 | 2026-04-26 | P2 | `_validate_*` helper 통합 → `src/utils.py` 또는 `src/_validation.py` (DRY) | Phase 4 entry 전 | EXT-AUD-005 §4.5 (REC-AI-01 + REC-SW-04 consensus) |
+| MT-020 | 2026-04-26 | P2 | `resist_stochastic.py` 539줄 모듈 분할 검토 (chain/budget/calibration) | 다음 정밀화 PR | EXT-AUD-005 §4.5 (REC-SW-05) |
+| MT-021 | 2026-04-26 | P2 | docs/phase5 에 threshold 0.25 (acid) vs 0.3 (intensity) 의미 차이 명시. depth absorption paper #20 정량 비교 | 다음 PR | EXT-AUD-005 §4.5 (REC-EUV-01/02) |
 
 ---
 
@@ -98,10 +108,14 @@ UNVERIFIED:          0
 | MT-008 | 2026-04-26 | P2 | paraxial vs full angular OPL 비교 옵션 | `src/wafer_topo.py`, `tests/phase3_DOF.py` |
 | MT-009 | 2026-04-26 | P2 | defocus-aware pupil sampling sanity check | `src/wafer_topo.py`, `src/pupil.py`, `src/aerial.py` |
 | MT-010 | 2026-04-26 | P2 | defocus invariant tests 추가 | `tests/audits/test_fft_invariants.py` |
+| **MT-011** | 2026-04-26 | P0 | `.github/CLAUDE.md` v2.1 sync — **MT-015 로 통합** | (재할당) |
+| **MT-012** | 2026-04-26 | P1 | k₂ fitting (3 신규 tests in Phase 5 PR) | `tests/phase3_DOF.py::test_k2_fit_*` (3 tests) |
 | MT-011 | 2026-04-26 | **P0** | `.github/CLAUDE.md` 를 REVIEWER_DIRECTIVE v2.1 자동 트리거 절차로 sync | `.github/CLAUDE.md` |
 | MT-012 | 2026-04-26 | P1 | k₂ fitting 보고 (NA/pitch sweep + DOF = k₂·λ/NA² 정량 검증, KPI K3 100% 합격선) | `src/dof.py`, `tests/phase3_DOF.py`, `docs/phase3_DOF_analysis.md` |
 | MT-013 | 2026-04-26 | P1 | `진행계획서.md §13` v1.2 + v1.3 변경 이력 추가 | `진행계획서.md` |
 | MT-014 | 2026-04-26 | P1 | `docs/phase3_design.md §4` P3-L2 문구 갱신 | `docs/phase3_design.md` |
+| **MT-015** | 2026-04-27 | **P0** | Legacy project-name rebrand to High-NA EUV Lithography Simulator + `.github/CLAUDE.md` v2.1 English-first sync | `.github/CLAUDE.md`, `README.md`, docs, audit files, source docstrings |
+| **MT-016** | 2026-04-27 | P1 | Tier 1 matplotlib 3D notebooks for focus stack, pupil wavefront, resist depth dose, and Mask 3D effect bars | `notebooks/3d_focus_stack.ipynb`, `notebooks/3d_pupil_wavefront.ipynb`, `notebooks/3d_resist_depth.ipynb`, `notebooks/3_M3D_effects.ipynb` |
 
 ---
 

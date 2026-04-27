@@ -1,6 +1,6 @@
 # 감사 시스템 (Audit System)
 
-> High-NA EUV Digital Twin 프로젝트의 **gated review** 체계.
+> High-NA EUV Simulator 프로젝트의 **gated review** 체계.
 > 모든 코드 진행은 4개 역할의 감사를 통과해야 다음 Phase로 진행할 수 있다.
 
 ---

@@ -1,6 +1,6 @@
 # High-NA EUV 참고 논문 — 마스터 인덱스
 
-> 0.55 NA EUV Lithography Digital Twin 프로젝트의 21편 reference paper 정리
+> 0.55 NA EUV Lithography Simulator 프로젝트의 21편 reference paper 정리
 > 폴더: `/논문/papers/`
 
 ---
