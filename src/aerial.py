@@ -1,13 +1,13 @@
-"""Aerial-image solver (scalar Fourier optics, fully coherent).
+"""Aerial-image solver (scalar Fourier optics, coherent source point).
 
 Implements the canonical Hopkins coherent imaging step:
 
     I(x_w, y_w) = | IFFT( FFT(M) · P(f_x, f_y) ) |^2
 
 where M is the complex mask field at the wafer plane (after the
-anamorphic 4×/8× demagnification) and P is the pupil function. Partial
-coherence and source integration come in Phase 2; for now the source is a
-single on-axis plane wave.
+anamorphic 4×/8× demagnification) and P is the pupil function. Phase 2 adds
+off-axis source-point tilts here; `illuminator.py` builds partial coherence by
+incoherently summing multiple coherent source-point images.
 
 Coordinate convention
 ---------------------
@@ -128,6 +128,39 @@ def _build_aerial_pupil(
     return (amplitude * phase).astype(np.complex128)
 
 
+def _validate_source_sigma(source_sigma_x: float, source_sigma_y: float) -> None:
+    if not np.isfinite(source_sigma_x) or not np.isfinite(source_sigma_y):
+        raise ValueError("source sigma coordinates must be finite")
+    if np.hypot(source_sigma_x, source_sigma_y) > 1.0 + 1e-12:
+        raise ValueError("source sigma radius must be <= 1")
+
+
+def _apply_source_tilt(
+    mask_field: np.ndarray,
+    wafer: WaferGrid,
+    *,
+    source_sigma_x: float,
+    source_sigma_y: float,
+    na: float,
+    wavelength: float,
+) -> np.ndarray:
+    """Apply a Phase 2 off-axis illumination tilt before coherent imaging."""
+    if source_sigma_x == 0.0 and source_sigma_y == 0.0:
+        return np.asarray(mask_field, dtype=np.complex128)
+
+    fx_source = source_sigma_x * na / wavelength
+    fy_source = source_sigma_y * na / wavelength
+    x = (np.arange(wafer.nx) - wafer.nx // 2) * wafer.pixel_x_m
+    y = (np.arange(wafer.ny) - wafer.ny // 2) * wafer.pixel_y_m
+    phase = np.exp(
+        1j
+        * 2.0
+        * np.pi
+        * (fy_source * y[:, np.newaxis] + fx_source * x[np.newaxis, :])
+    )
+    return np.asarray(mask_field, dtype=np.complex128) * phase
+
+
 def aerial_image(
     mask_field: np.ndarray,
     mask_grid: MaskGrid,
@@ -136,6 +169,9 @@ def aerial_image(
     anamorphic: bool = True,
     mag_x: float = C.ANAMORPHIC_MAG_X,
     mag_y: float = C.ANAMORPHIC_MAG_Y,
+    source_sigma_x: float = 0.0,
+    source_sigma_y: float = 0.0,
+    normalize: bool = True,
 ) -> tuple[np.ndarray, WaferGrid]:
     """Compute the coherent aerial image at the wafer plane.
 
@@ -149,6 +185,12 @@ def aerial_image(
         If None, defaults to NA=0.55, ε=0.20, lambda=13.5 nm, no aberration.
     anamorphic : bool
         If False, mag_x and mag_y are forced to 1 (1× imaging for tests).
+    source_sigma_x, source_sigma_y : float
+        Off-axis source point in normalized pupil coordinates for Phase 2
+        partial-coherence integration. `(0, 0)` is the original on-axis source.
+    normalize : bool
+        If True, scale the output peak to 1. Partial-coherence integration can
+        set this False per source point and normalize after incoherent summation.
 
     Returns
     -------
@@ -163,6 +205,7 @@ def aerial_image(
         )
     if pupil_spec is None:
         pupil_spec = PupilSpec(grid_size=max(mask_grid.nx, mask_grid.ny))
+    _validate_source_sigma(source_sigma_x, source_sigma_y)
 
     wafer = wafer_grid_from_mask(mask_grid, mag_x, mag_y, anamorphic)
 
@@ -186,7 +229,15 @@ def aerial_image(
         defocus_approximation=pupil_spec.defocus_approximation,
     )
 
-    spectrum = np.fft.fftshift(np.fft.fft2(mask_field))
+    tilted_field = _apply_source_tilt(
+        mask_field,
+        wafer,
+        source_sigma_x=source_sigma_x,
+        source_sigma_y=source_sigma_y,
+        na=pupil_spec.na,
+        wavelength=pupil_spec.wavelength,
+    )
+    spectrum = np.fft.fftshift(np.fft.fft2(tilted_field))
     filtered = spectrum * pupil
     field = np.fft.ifft2(np.fft.ifftshift(filtered))
     intensity = np.abs(field) ** 2
@@ -201,9 +252,9 @@ def aerial_image(
     noise_floor = max(bright_field_intensity, 1.0) * 1e-12
 
     peak = float(np.max(intensity))
-    if peak > noise_floor:
+    if normalize and peak > noise_floor:
         intensity = intensity / peak
-    else:
+    elif peak <= noise_floor:
         intensity = np.zeros_like(intensity)
     return intensity.astype(np.float64), wafer
 

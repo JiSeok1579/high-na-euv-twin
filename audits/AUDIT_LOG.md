@@ -19,6 +19,7 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-27 | Phase 2 | implementation | Phase 2 Part 01 source-shape + partial-coherence MVP | 🟢 PASS | [docs/phase2_illumination_design.md](../docs/phase2_illumination_design.md) | `src/illuminator.py`, off-axis source-point aerial hooks, starter source JSON, `1_partial_coherence` notebook, and 9 Phase 2 tests added. 98/98 tests PASS. nbconvert execution PASS |
 | 2026-04-27 | meta | visualization | MT-022 3D notebook parameter sweeps | 🟢 PASS | [PROJECT_OVERVIEW.md](../PROJECT_OVERVIEW.md) | `3d_focus_stack`, `3d_pupil_wavefront`, and `3d_resist_depth` notebooks now include focus contrast, Zernike mode, and resist absorption sweep cells. nbconvert execution PASS. 89/89 tests PASS |
 | 2026-04-27 | meta | policy | INST-001 study purpose + audit-grade relaxation | 🟢 PASS | [docs/study_grade_relaxation.md](../docs/study_grade_relaxation.md) | README, PROJECT_OVERVIEW, 진행계획서, REVIEWER_DIRECTIVE, and `.github/CLAUDE.md` now declare study purpose and study-grade severity. Workspace rename remains manual per INST-001. 89/89 tests PASS |
 | 2026-04-27 | Phase 4 | implementation | Phase 4 Part 04 rigorous-data import + aerial regression hooks | 🟢 PASS | [docs/phase4_M3D_design.md](../docs/phase4_M3D_design.md) | `load_mask3d_lookup_csv`, `lookup_boundary_corrected_mask`, `compare_mask3d_aerial_images`, `lookup_mask3d_aerial_regression`, and a rigorous import CSV template added. 89/89 tests PASS |
@@ -53,8 +54,8 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           28
-PASS:                25
+총 감사 수:           29
+PASS:                26
 PASS WITH P0:        3 (EXT-AUD-001/004/005)
 CAUTION:             0
 MAJOR RISK:          0
@@ -72,12 +73,13 @@ UNVERIFIED:          0
   P0 개수:             1 → 0 → 0 → 1 → 0 (MT-011 처리)
   P1 개수:             6 → 2 → 0 → 3 → 1 → 0 (MT-012 처리)
   Mitigation 처리율 (누적): — → 86% → 100% → 100% → 93% → 100% (14/14)
-  단위 테스트 수:       5 → 9 → 14 → 20 → 25 → 32 → 38 → 42 → 48 → 52 → 58 → 61 → 64 → 73 → 79 → 84 → 89 (+1680% 누적) ★
-  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 → 25/25 → 32/32 → 38/38 → 42/42 → 48/48 → 52/52 → 58/58 → 61/61 → 64/64 → 73/73 → 79/79 → 84/84 → 89/89 (100% 유지)
+  단위 테스트 수:       5 → 9 → 14 → 20 → 25 → 32 → 38 → 42 → 48 → 52 → 58 → 61 → 64 → 73 → 79 → 84 → 89 → 98 (+1860% 누적) ★
+  Test pass rate:      5/5 → 9/9 → 14/14 → 20/20 → 25/25 → 32/32 → 38/38 → 42/42 → 48/48 → 52/52 → 58/58 → 61/61 → 64/64 → 73/73 → 79/79 → 84/84 → 89/89 → 98/98 (100% 유지)
   KPI K3 (DOF):        0% → 0% → enabled → 50% → 100% → study-grade qualitative PASS ★
   KPI K4 (M3D 6):      0% → reduced six-effect + field boundary evidence ★
   KPI K1 (end-to-end): optical only → full MVP ★
-  KPI 평균 진척률:      33% → 33% → 33%+ → 42% → 50% → 58% → 61% → 63% → 65% → 67% → 70% → 72% → 75%
+  Phase 2 source:      pending → partial-coherence source-shape MVP enabled ★
+  KPI 평균 진척률:      33% → 33% → 33%+ → 42% → 50% → 58% → 61% → 63% → 65% → 67% → 70% → 72% → 75% → 78%
   누적 단순화:          7 → 7 → 11 → 14 (P4-L6 신규)
   단순화 4중 기록률:    100% → 100% → 100% → 85% (study-grade P3 backlog; 80% 이상 허용)
 

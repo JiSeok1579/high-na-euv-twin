@@ -1,0 +1,101 @@
+{
+  "schema": "high-na-euv-source-shape-library-v1",
+  "description": "Study-grade starter source shapes for Phase 2 partial coherence and future Phase 6 SMO sweeps.",
+  "source_shapes": [
+    {
+      "name": "point_on_axis",
+      "points": [
+        {
+          "sigma_x": 0.0,
+          "sigma_y": 0.0,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "dipole_x_0p65",
+      "points": [
+        {
+          "sigma_x": -0.65,
+          "sigma_y": 0.0,
+          "weight": 1.0
+        },
+        {
+          "sigma_x": 0.65,
+          "sigma_y": 0.0,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "quadrupole_cardinal_0p55",
+      "points": [
+        {
+          "sigma_x": -0.55,
+          "sigma_y": 0.0,
+          "weight": 1.0
+        },
+        {
+          "sigma_x": 0.55,
+          "sigma_y": 0.0,
+          "weight": 1.0
+        },
+        {
+          "sigma_x": 0.0,
+          "sigma_y": -0.55,
+          "weight": 1.0
+        },
+        {
+          "sigma_x": 0.0,
+          "sigma_y": 0.55,
+          "weight": 1.0
+        }
+      ]
+    },
+    {
+      "name": "annular_0p30_0p75_8pt",
+      "points": [
+        {
+          "sigma": 0.525,
+          "angle_deg": 0.0,
+          "weight": 1.0
+        },
+        {
+          "sigma": 0.525,
+          "angle_deg": 45.0,
+          "weight": 1.0
+        },
+        {
+          "sigma": 0.525,
+          "angle_deg": 90.0,
+          "weight": 1.0
+        },
+        {
+          "sigma": 0.525,
+          "angle_deg": 135.0,
+          "weight": 1.0
+        },
+        {
+          "sigma": 0.525,
+          "angle_deg": 180.0,
+          "weight": 1.0
+        },
+        {
+          "sigma": 0.525,
+          "angle_deg": 225.0,
+          "weight": 1.0
+        },
+        {
+          "sigma": 0.525,
+          "angle_deg": 270.0,
+          "weight": 1.0
+        },
+        {
+          "sigma": 0.525,
+          "angle_deg": 315.0,
+          "weight": 1.0
+        }
+      ]
+    }
+  ]
+}

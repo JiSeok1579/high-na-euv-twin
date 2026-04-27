@@ -251,14 +251,17 @@ resist: threshold
 - ✅ `src/dof.py` — Phase 3 focus-stack contrast + nominal DOF metric + k2 fit + focus-drilling average
 - ✅ `src/mask_3d.py` — Phase 4 Part 04: paper #12 six-effect Mask 3D stub, boundary-corrected complex fields, absorber provenance, lookup CSV/JSON imports, and aerial-image regression hooks
 - ✅ `src/resist_threshold.py`, `src/resist_blur.py`, `src/resist_depth.py`, `src/resist_stochastic.py`, `src/metrics.py` — Phase 5 complete: threshold + Gaussian blur + depth/profile + stochastic CD/LWR/LCDU/convergence/calibration metrics
-- ⏳ `src/` (Phase 2/6) — `illuminator.py`, `smo.py`, `pmwo.py`
+- ✅ `src/illuminator.py` — Phase 2 Part 01: point/dipole/quadrupole/annular/freeform source shapes, JSON loaders, and partial-coherence incoherent summation
+- ⏳ `src/` (Phase 6) — `smo.py`, `pmwo.py`
 - ✅ `tests/phase1_aerial_image.py` — 5 unit tests, all PASS
 - ✅ `tests/audits/test_fft_invariants.py` — Parseval / fftshift / NA scaling / grid refinement invariant tests
 - ✅ `tests/phase3_DOF.py` — defocus sign / conjugacy / sampling / DOF / k2 / focus-drilling regression tests
 - ✅ `tests/phase5_threshold.py`, `tests/phase5_blur.py`, `tests/phase5_depth.py`, `tests/phase5_stochastic.py`, `tests/integration_end_to_end.py` — threshold/blur/depth/stochastic resist + end-to-end tests
 - ✅ `tests/phase4_m3d_6effects.py` — Phase 4 paper #12 six-effect, field boundary-correction, absorber JSON, lookup-table import, and aerial-regression tests
-- ⏳ `tests/` (Phase 2/6) — 후속 정밀화 단위 테스트
+- ✅ `tests/phase2_illumination.py` — Phase 2 source geometry, JSON loading, off-axis source, and partial-coherence regression tests
+- ⏳ `tests/` (Phase 6) — 후속 최적화 단위 테스트
 - ✅ `notebooks/0_first_aerial_image.ipynb` — Phase 1 데모
+- ✅ `notebooks/1_partial_coherence.ipynb` — Phase 2 source-shape contrast comparison
 - ✅ `notebooks/3_M3D_effects.ipynb` — Phase 4 Mask 3D qualitative effect visualization
 - ✅ `notebooks/3d_focus_stack.ipynb`, `notebooks/3d_pupil_wavefront.ipynb`, `notebooks/3d_resist_depth.ipynb` — Tier 1 matplotlib 3D visualizations with parameter-sweep cells
 - ✅ `notebooks/4a_threshold_resist.ipynb`, `notebooks/4b_resist_levels.ipynb` — Phase 5 threshold/blur/depth/profile/stochastic/convergence/calibration demos
@@ -266,6 +269,7 @@ resist: threshold
 - ✅ `data/absorber_nk/materials.json` — starter absorber n,k data with provenance fields for paper #7/#17 qualitative screening
 - ✅ `data/mask3d_lookup/qualitative_example.json` — lookup-table schema example for future rigorous Mask 3D rows
 - ✅ `data/mask3d_lookup/rigorous_import_template.csv` — header-only RCWA/DDM/measured Mask 3D lookup import template
+- ✅ `data/source_shapes/basic_sources.json` — Phase 2 starter source-shape library for notebooks and future SMO sweeps
 - ✅ `docs/phase1_design.md` — Phase 1 설계 결정 + 단순화 명시
 - ✅ `.pre-commit-config.yaml` — ruff + basic file hygiene hooks
 - ✅ `.github/` + `scripts/configure_github_automerge.sh` — CI, Claude review, title-gated auto-merge 셋업
@@ -273,8 +277,9 @@ resist: threshold
 - ✅ `docs/phase3_DOF_analysis.md` — DOF metric Part 03 분석 노트
 - ✅ `docs/phase5_resist_models.md` — Threshold/Gaussian blur/depth/stochastic resist + 한계 기록
 - ✅ `docs/phase4_M3D_design.md` — Phase 4 reduced Mask 3D boundary correction, lookup import, and aerial-regression limits
+- ✅ `docs/phase2_illumination_design.md` — Phase 2 source-shape and partial-coherence study-grade model
 - ✅ `docs/study_grade_relaxation.md` — study-purpose strictness and audit severity policy
-- ⏳ `docs/` (Phase 2/6, API) — 후속 문서
+- ⏳ `docs/` (Phase 6, API) — 후속 문서
 
 ### 6.3 권장 디렉토리 스캐폴딩 (제안)
 
@@ -299,6 +304,7 @@ High-NA EUV Lithography Simulator/
 │   └── metrics.py
 ├── tests/
 │   ├── phase1_aerial_image.py        # paper 19, 15
+│   ├── phase2_illumination.py        # source shapes and partial coherence
 │   ├── phase3_DOF_check.py           # paper 14
 │   ├── phase4_m3d_checklist.py       # paper 12 6 effects
 │   └── phase5_stochastic_LWR.py      # paper 1, 21
@@ -382,13 +388,13 @@ High-NA EUV Lithography Simulator/
 - Replace starter absorber and lookup example values with measured n,k and rigorous Mask 3D rows.
 - Import RCWA/DDM/measured rows through the CSV/JSON lookup loaders and gate field-level aerial-image agreement with external reference images.
 
-### Step 3 — Phase 2 partial coherence
-- `illuminator.py`: annular / dipole / quadrupole source sampling
-- source point 수 대비 runtime, contrast, NILS 회귀 테스트 추가
-
-### Step 4 — Phase 6 optimization
+### Step 3 — Phase 6 optimization
 - Phase 5 stochastic LWR output을 PMWO/SMO 목적함수 penalty로 연결
 - paper #9 fast SMO baseline + paper #10 PMWO LWR/overlay 비교
+
+### Step 4 — Phase 2 refinements
+- Expand source-point runtime/accuracy sweeps and NILS regression.
+- Replace starter source libraries with measured or externally generated pupil-fill rows when available.
 
 ### Step 5 — Long-term (3개월+)
 - 산업 PMWO 비교 (paper 6, 10 — 가능하면 institutional access)
@@ -422,15 +428,15 @@ HOW        Fourier optics + ray tracing + Kirchhoff mask + threshold→stochasti
   ✅ 물리 핸드북 (.md, 82 sections)
   ✅ 심층 연구 보고서 (.docx, 9 sections)
   ✅ 21편 논문 메타데이터 + 통합 학습 (KNOWLEDGE.md, QUICK_REFERENCE.md, INDEX.md)
-  ✅ Simulator code Phase 1/3/5 implemented
+  ✅ Simulator code Phase 1/2/3/5 implemented
   ✅ Phase 4 paper #12 six-effect stub + field boundary correction + lookup hooks started
   ✅ Tier 1 matplotlib 3D notebooks expanded with parameter sweeps
   ⏳ Open Access PDF 다운로드 (사용자 수동)
 
 다음 단계:
-  1. Phase 4 real RCWA/DDM or measured Mask 3D row ingestion
-  2. Phase 2 partial coherence / illuminator
-  3. Phase 6 PMWO/SMO objective에 Phase 5 LWR penalty 연결
+  1. Phase 6 PMWO/SMO objective에 Phase 2 source + Phase 5 LWR penalty 연결
+  2. Phase 4 real RCWA/DDM or measured Mask 3D row ingestion
+  3. Phase 2 measured source-shape replacement and NILS sweeps
 
 핵심 trade-off:    NA↑ → R↑  but DOF↓ + M3D↑
 가장 큰 위험:      Phase 4 (Mask 3D) 의 Kirchhoff 가정 정량 한계
@@ -496,5 +502,9 @@ MVP 3편:           #19 (좌표) + #9 ★OA (SMO 구현 가이드) + #12 (M3D �
 - **2026-04-27** MT-022 3D notebook sweep expansion completed.
   - Added wide defocus contrast surface, six-mode Zernike comparison, and low/nominal/high resist absorption dose-volume comparison.
   - Executed all three notebooks with `jupyter nbconvert --execute`.
+- **2026-04-27** Phase 2 Part 01 partial-coherence illumination MVP implemented.
+  - Added `src/illuminator.py` with point, dipole, quadrupole, annular, freeform, JSON library, and incoherent intensity-sum APIs.
+  - Added `tests/phase2_illumination.py`, `data/source_shapes/basic_sources.json`, `notebooks/1_partial_coherence.ipynb`, and `docs/phase2_illumination_design.md`.
+  - Kept Phase 1 coherent aerial behavior as the on-axis point-source baseline while enabling off-axis source-point tilts for Phase 2.
 
 > 새 논문 추가 / Phase 진행 / 코드 모듈 추가 시 본 문서의 §2(인벤토리), §5(로드맵), §6(산출물)을 동시 업데이트할 것.

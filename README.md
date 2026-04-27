@@ -48,7 +48,7 @@ jupyter lab notebooks/0_first_aerial_image.ipynb
 | Phase | Scope | Status |
 |---|---|---|
 | 1 | Scalar Fourier optics MVP: pupil, mask, aerial image | Complete |
-| 2 | Partial coherence / illuminator | Pending |
+| 2 | Partial coherence / illuminator | Part 01: source-shape and partial-coherence MVP |
 | 3 | Wafer topography and DOF | Complete through k2 fitting |
 | 4 | Mask 3D effects | Part 04: rigorous-data import and aerial regression hooks |
 | 5 | Photoresist: threshold, blur, depth, stochastic | Complete through calibration exit gates |
@@ -57,6 +57,7 @@ jupyter lab notebooks/0_first_aerial_image.ipynb
 ## Notebook Demos
 
 - `notebooks/0_first_aerial_image.ipynb`
+- `notebooks/1_partial_coherence.ipynb`
 - `notebooks/3d_focus_stack.ipynb` - 3D focus and contrast sweeps.
 - `notebooks/3d_pupil_wavefront.ipynb` - 3D Zernike mode comparison.
 - `notebooks/3d_resist_depth.ipynb` - 3D dose-depth absorption sweep.
@@ -68,6 +69,7 @@ jupyter lab notebooks/0_first_aerial_image.ipynb
 
 - `PROJECT_OVERVIEW.md` - project inventory, roadmap, and operating context.
 - `진행계획서.md` - phase plan, KPIs, WBS, and risk register.
+- `docs/phase2_illumination_design.md` - Phase 2 source-shape and partial-coherence model.
 - `docs/phase4_M3D_design.md` - Phase 4 Mask 3D boundary, lookup import, and aerial-regression model.
 - `docs/phase5_resist_models.md` - Phase 5 resist model stack.
 - `docs/study_grade_relaxation.md` - study-purpose strictness and audit severity policy.
