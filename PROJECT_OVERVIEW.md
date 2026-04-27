@@ -253,7 +253,8 @@ resist: threshold
 - ✅ `src/resist_threshold.py`, `src/resist_blur.py`, `src/resist_depth.py`, `src/resist_stochastic.py`, `src/metrics.py` — Phase 5 complete: threshold + Gaussian blur + depth/profile + stochastic CD/LWR/LCDU/convergence/calibration metrics
 - ✅ `src/illuminator.py` — Phase 2 Part 01: point/dipole/quadrupole/annular/freeform source shapes, JSON loaders, and partial-coherence incoherent summation
 - ✅ `src/smo.py` — Phase 6 Part 01: study-grade source-mask grid-search MVP with Phase 2 source variables and Phase 5 LWR penalty
-- ⏳ `src/` (Phase 6 follow-up) — `pmwo.py`, `opc.py`
+- ✅ `src/pmwo.py` — Phase 6 Part 02: OPC bias candidates, pupil/wavefront sweeps, row-wise 2-D EPE maps, and PMWO grid search
+- ⏳ `src/` (Phase 6 follow-up) — `opc.py`, richer ILT/gradient backends
 - ✅ `tests/phase1_aerial_image.py` — 5 unit tests, all PASS
 - ✅ `tests/audits/test_fft_invariants.py` — Parseval / fftshift / NA scaling / grid refinement invariant tests
 - ✅ `tests/phase3_DOF.py` — defocus sign / conjugacy / sampling / DOF / k2 / focus-drilling regression tests
@@ -261,13 +262,14 @@ resist: threshold
 - ✅ `tests/phase4_m3d_6effects.py` — Phase 4 paper #12 six-effect, field boundary-correction, absorber JSON, lookup-table import, and aerial-regression tests
 - ✅ `tests/phase2_illumination.py` — Phase 2 source geometry, JSON loading, off-axis source, and partial-coherence regression tests
 - ✅ `tests/phase6_smo.py` — Phase 6 SMO candidate generation, convergence, source-variable, LWR objective, and validation tests
-- ⏳ `tests/` (Phase 6 follow-up) — PMWO/OPC refinement tests
+- ✅ `tests/phase6_pmwo.py` — Phase 6 Part 02 OPC bias, pupil/wavefront, 2-D EPE, and PMWO ranking tests
+- ⏳ `tests/` (Phase 6 follow-up) — ILT/gradient refinement tests
 - ✅ `notebooks/0_first_aerial_image.ipynb` — Phase 1 데모
 - ✅ `notebooks/1_partial_coherence.ipynb` — Phase 2 source-shape contrast comparison
 - ✅ `notebooks/3_M3D_effects.ipynb` — Phase 4 Mask 3D qualitative effect visualization
 - ✅ `notebooks/3d_focus_stack.ipynb`, `notebooks/3d_pupil_wavefront.ipynb`, `notebooks/3d_resist_depth.ipynb` — Tier 1 matplotlib 3D visualizations with parameter-sweep cells
 - ✅ `notebooks/4a_threshold_resist.ipynb`, `notebooks/4b_resist_levels.ipynb` — Phase 5 threshold/blur/depth/profile/stochastic/convergence/calibration demos
-- ✅ `notebooks/5_SMO_PMWO.ipynb` — Phase 6 SMO candidate ranking and optimized print comparison
+- ✅ `notebooks/5_SMO_PMWO.ipynb` — Phase 6 SMO/PMWO candidate ranking and optimized print comparison
 - ✅ `data/absorber_nk/materials.json` — starter absorber n,k data with provenance fields for paper #7/#17 qualitative screening
 - ✅ `data/mask3d_lookup/qualitative_example.json` — lookup-table schema example for future rigorous Mask 3D rows
 - ✅ `data/mask3d_lookup/rigorous_import_template.csv` — header-only RCWA/DDM/measured Mask 3D lookup import template
@@ -280,7 +282,7 @@ resist: threshold
 - ✅ `docs/phase5_resist_models.md` — Threshold/Gaussian blur/depth/stochastic resist + 한계 기록
 - ✅ `docs/phase4_M3D_design.md` — Phase 4 reduced Mask 3D boundary correction, lookup import, and aerial-regression limits
 - ✅ `docs/phase2_illumination_design.md` — Phase 2 source-shape and partial-coherence study-grade model
-- ✅ `docs/phase6_optimization_design.md` — Phase 6 source-mask optimization MVP objective and simplifications
+- ✅ `docs/phase6_optimization_design.md` — Phase 6 SMO/PMWO objective, OPC candidates, 2-D EPE maps, and simplifications
 - ✅ `docs/study_grade_relaxation.md` — study-purpose strictness and audit severity policy
 - ⏳ `docs/` (Phase 6 API/refinement) — PMWO/OPC follow-up docs
 
@@ -311,7 +313,8 @@ High-NA EUV Lithography Simulator/
 │   ├── phase3_DOF_check.py           # paper 14
 │   ├── phase4_m3d_checklist.py       # paper 12 6 effects
 │   ├── phase5_stochastic_LWR.py      # paper 1, 21
-│   └── phase6_smo.py                 # paper 9, 10 objective loop
+│   ├── phase6_smo.py                 # paper 9, 10 objective loop
+│   └── phase6_pmwo.py                # PMWO/OPC candidates and 2-D EPE
 ├── data/
 │   └── absorber_nk/                  # paper 7, 17 후보 재료
 ├── notebooks/
@@ -392,9 +395,9 @@ High-NA EUV Lithography Simulator/
 - Replace starter absorber and lookup example values with measured n,k and rigorous Mask 3D rows.
 - Import RCWA/DDM/measured rows through the CSV/JSON lookup loaders and gate field-level aerial-image agreement with external reference images.
 
-### Step 3 — Phase 6 PMWO/OPC refinement
-- Extend the Part 01 grid-search SMO loop to PMWO and OPC candidate families.
-- Add 2-D EPE maps, pupil/wavefront candidates, and richer source-shape sweeps.
+### Step 3 — Phase 6 gradient/ILT refinement
+- Extend the grid-search loops to richer ILT candidate families and numeric-gradient experiments.
+- Add full-layout contour extraction and larger source/pupil/wavefront sweeps.
 
 ### Step 4 — Phase 2 refinements
 - Expand source-point runtime/accuracy sweeps and NILS regression.
@@ -438,7 +441,7 @@ HOW        Fourier optics + ray tracing + Kirchhoff mask + threshold→stochasti
   ⏳ Open Access PDF 다운로드 (사용자 수동)
 
 다음 단계:
-  1. Phase 6 Part 02 PMWO/OPC candidate families and 2-D EPE maps
+  1. Phase 6 Part 03 ILT/gradient refinement and full-layout contour EPE
   2. Phase 4 real RCWA/DDM or measured Mask 3D row ingestion
   3. Phase 2 measured source-shape replacement and NILS sweeps
 
@@ -514,5 +517,9 @@ MVP 3편:           #19 (좌표) + #9 ★OA (SMO 구현 가이드) + #12 (M3D �
   - Added `src/smo.py` with deterministic grid-search over mask candidates, Phase 2 source shapes, and dose values.
   - Connected Phase 5 stochastic LWR budget to the optimization objective.
   - Added `tests/phase6_smo.py`, `notebooks/5_SMO_PMWO.ipynb`, and `docs/phase6_optimization_design.md`.
+- **2026-04-27** Phase 6 Part 02 PMWO/OPC candidate expansion implemented.
+  - Added `src/pmwo.py` with OPC bias masks, pupil/wavefront candidates, row-wise 2-D EPE maps, and PMWO grid search.
+  - Added `tests/phase6_pmwo.py` and expanded `notebooks/5_SMO_PMWO.ipynb`.
+  - Updated Phase 6 docs to record the Part 02 simplifications and verification scope.
 
 > 새 논문 추가 / Phase 진행 / 코드 모듈 추가 시 본 문서의 §2(인벤토리), §5(로드맵), §6(산출물)을 동시 업데이트할 것.
