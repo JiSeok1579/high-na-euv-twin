@@ -19,6 +19,7 @@
 
 | 날짜 | Phase | 역할 | 주제 | 판정 | 보고서 | 비고 |
 |------|-------|------|------|------|--------|------|
+| 2026-04-28 | meta | visualization audit | 2D validation-first focus/resist notebook correction | 🟢 PASS | [docs/3d_implementation_guide.md](../docs/3d_implementation_guide.md) | `3d_focus_stack` now uses 41 defocus samples, x-defocus heatmap, scalar contrast curve, and demo-only 3D surface. `3d_resist_depth` now uses 31 depth samples, Beer-Lambert x-depth heatmap, focus-depth coupled comparison, and demo-only 3D surface. 118/118 tests PASS. nbconvert execution PASS |
 | 2026-04-27 | docs | onboarding | GitHub first-time user README + 3D implementation guide | 🟢 PASS | [README.md](../README.md) | README rebuilt as a navigation hub. `docs/getting_started.md` and `docs/3d_implementation_guide.md` added with setup, run, notebook, 3D implementation, and nbconvert validation guidance. 118/118 tests PASS |
 | 2026-04-27 | Phase 6 | implementation | Phase 6 Part 04 assist-feature OPC + pixel-level ILT | 🟢 PASS | [docs/phase6_optimization_design.md](../docs/phase6_optimization_design.md) | `src/opc.py`, assist-feature masks, arbitrary OPC mask contour evaluation, pixel-level ILT refinement, notebook expansion, remaining-work checklist, and 5 Phase 6 OPC tests added. 118/118 tests PASS. nbconvert execution PASS |
 | 2026-04-27 | Phase 6 | implementation | Phase 6 Part 03 ILT gradient + full-layout contour EPE | 🟢 PASS | [docs/phase6_optimization_design.md](../docs/phase6_optimization_design.md) | `src/ilt.py`, full-layout x/y contour EPE, finite-difference mask-bias gradient, ILT refinement, notebook expansion, and 5 Phase 6 ILT tests added. 113/113 tests PASS. nbconvert execution PASS |
@@ -59,8 +60,8 @@
 ## 통계 (자동 갱신 대상)
 
 ```
-총 감사 수:           34
-PASS:                31
+총 감사 수:           35
+PASS:                32
 PASS WITH P0:        3 (EXT-AUD-001/004/005)
 CAUTION:             0
 MAJOR RISK:          0
