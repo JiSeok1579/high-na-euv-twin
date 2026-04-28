@@ -17,7 +17,7 @@ Conventions
 Reference
 ---------
 - physics_considerations.md Part E (Fourier optics)
-- 진행계획서.md §4.1 WP1.2
+- PROJECT_PLAN.md Phase 1
 - Paper #15 (central obscuration), #19 (anamorphic)
 """
 

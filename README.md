@@ -118,6 +118,10 @@ commands, read [docs/3d_implementation_guide.md](docs/3d_implementation_guide.md
   2D validation plots and demo-only 3D notebook views are implemented.
 - [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) - inventory, roadmap, remaining
   work checklist, and operating context.
+- [PROJECT_PLAN.md](PROJECT_PLAN.md) - phase plan, KPI tracking, deliverables,
+  risk register, and change history.
+- [references/papers/README.md](references/papers/README.md) - reference-paper
+  index and study notes.
 - [audits/AUDIT_LOG.md](audits/AUDIT_LOG.md) - audit history and test-count
   progression.
 - [docs/study_grade_relaxation.md](docs/study_grade_relaxation.md) - why this

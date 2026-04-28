@@ -1,6 +1,6 @@
 """Phase 1 unit tests — Scalar Fourier optics MVP.
 
-Verifies the four exit criteria from 진행계획서.md §4.1:
+Verifies the four Phase 1 exit criteria from PROJECT_PLAN.md:
 
 1. Single pinhole + circular pupil → Airy-like PSF (Bessel/sinc shape).
 2. Line/space scaling: large pitch resolved, sub-resolution pitch washes

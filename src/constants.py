@@ -1,7 +1,7 @@
 """Physical constants for the High-NA EUV simulator.
 
 All units are SI unless noted. Length in meters, energy in joules.
-Reference: PROJECT_OVERVIEW.md §7, 진행계획서.md §12.1.
+Reference: PROJECT_OVERVIEW.md and PROJECT_PLAN.md.
 """
 
 LAMBDA_EUV: float = 13.5e-9

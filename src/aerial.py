@@ -24,7 +24,7 @@ Coordinate convention
 References
 ----------
 - physics_considerations.md Part E (Fourier optics), Part F (NA)
-- 진행계획서.md §4.1 WP1.4
+- PROJECT_PLAN.md Phase 1
 - Paper #19 (anamorphic), #15 (annular pupil), #11 (target imaging)
 """
 

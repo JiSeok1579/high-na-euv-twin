@@ -1,4 +1,5 @@
 # Python
+.venv/
 __pycache__/
 *.pyc
 *.py[cod]
@@ -54,8 +55,9 @@ notebooks/.ipynb_checkpoints/
 .env.local
 *.local
 
-# PDFs (논문 폴더 — 대용량, 별도 동기화)
-논문/papers/pdfs/
+# Large reference PDFs are kept outside normal git sync.
+references/papers/pdfs/
 
-# Claude Code 로컬 설정
+# Claude Code local settings
+.claude/
 .claude/settings.local.json
