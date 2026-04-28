@@ -18,7 +18,7 @@ Conventions
 References
 ----------
 - physics_considerations.md Part L (Mask)
-- 진행계획서.md §4.1 WP1.3
+- PROJECT_PLAN.md Phase 1
 - Paper #12 (M3D, future Phase 4)
 """
 

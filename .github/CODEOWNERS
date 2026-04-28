@@ -1,7 +1,7 @@
-# 모든 변경에 본인 자동 review 요청
+# Request owner review for every change.
 *       @JiSeok1579
 
-# 감사 시스템 변경은 더 신중하게
+# Audit and planning files require explicit owner review.
 audits/         @JiSeok1579
-진행계획서.md     @JiSeok1579
+PROJECT_PLAN.md     @JiSeok1579
 PROJECT_OVERVIEW.md  @JiSeok1579

@@ -12,13 +12,13 @@ step.
 
 - `REVIEWER_DIRECTIVE.md` — external audit constitution, 3 experts + Data Scientist synthesis
 - `PROJECT_OVERVIEW.md` — project overview, scope, inventory, roadmap
-- `진행계획서.md` — 6 phases, KPI K1-K6, WBS, risk register
+- `PROJECT_PLAN.md` — 6 phases, KPI K1-K6, WBS, risk register
 - `audits/00_CI_CD_WORKFLOW.md` — gated review stages
 - `audits/01_data_analyst/INSTRUCTIONS.md`
 - `audits/02_physics/INSTRUCTIONS.md`
 - `audits/03_ai_numerical/INSTRUCTIONS.md`
 - `audits/04_simulation/INSTRUCTIONS.md`
-- `논문/papers/KNOWLEDGE.md` — integrated knowledge from 21 papers
+- `references/papers/KNOWLEDGE.md` — integrated knowledge from 21 papers
 - `high_na_euv_physics_considerations.md` — physics handbook
 - `docs/study_grade_relaxation.md` — study-purpose audit relaxation policy
 
@@ -151,7 +151,7 @@ Dependabot titles of the form `build(deps): bump ...` are acceptable.
 
 For a PR that closes a phase or enters a new phase:
 
-- `진행계획서.md §9.2` 8-item checklist must be satisfied.
+- `PROJECT_PLAN.md §9.2` 8-item checklist must be satisfied.
 - External audit folder must contain A1/A2/A3/00_FINAL.
 - All final verdicts must be PASS or CAUTION with explicit mitigation.
-- `PROJECT_OVERVIEW.md §6`, `진행계획서.md §5`, and `audits/AUDIT_LOG.md` must be updated in the same PR.
+- `PROJECT_OVERVIEW.md §6`, `PROJECT_PLAN.md §5`, and `audits/AUDIT_LOG.md` must be updated in the same PR.

@@ -75,9 +75,9 @@ image. This is the best first visual check.
 | 2 | `notebooks/1_partial_coherence.ipynb` | Source-shape and partial-coherence behavior |
 | 3 | `notebooks/4a_threshold_resist.ipynb` | Threshold resist and printed pattern |
 | 4 | `notebooks/4b_resist_levels.ipynb` | Blur, depth, stochastic, and calibration hooks |
-| 5 | `notebooks/3d_focus_stack.ipynb` | 3D defocus and contrast visualization |
+| 5 | `notebooks/3d_focus_stack.ipynb` | 2D focus validation heatmap, contrast curve, and demo-only 3D surface |
 | 6 | `notebooks/3d_pupil_wavefront.ipynb` | 3D Zernike wavefront visualization |
-| 7 | `notebooks/3d_resist_depth.ipynb` | 3D resist dose-depth visualization |
+| 7 | `notebooks/3d_resist_depth.ipynb` | 2D x-depth dose validation and demo-only 3D surface |
 | 8 | `notebooks/5_SMO_PMWO.ipynb` | SMO/PMWO/OPC/ILT optimization flow |
 
 ## Core Modules
@@ -144,7 +144,8 @@ MPLBACKEND=Agg jupyter nbconvert \
 
 - `README.md` gives the shortest route through the repository.
 - `PROJECT_OVERVIEW.md` is the broad project inventory and remaining-work map.
-- `docs/3d_implementation_guide.md` explains how the 3D notebooks are built.
+- `docs/3d_implementation_guide.md` explains the validation-first notebook
+  pattern and demo-only 3D views.
 - `docs/phase6_optimization_design.md` explains the SMO/PMWO/OPC/ILT objective.
 - `audits/AUDIT_LOG.md` records what was implemented and how it was validated.
 

@@ -1,167 +1,30 @@
-# 변경 요청 (Change Request) — TEMPLATE
+# Change Request Template
 
-> 다음 경우에 사용:
-> - Phase 정의 변경 (entry/exit criteria 수정)
-> - Out-of-Scope → In-Scope (또는 반대) 이동
-> - 단순화 정책 변경
-> - 일정 / 자원 / 인력 변경
-> - 핵심 의사결정 (Decision Log) 변경
->
-> 본 파일을 복사하여 `audits/<role 또는 cross>/reports/YYYY-MM-DD_CR-NNN_<topic>.md` 로 저장.
+Change ID:
+Date:
+Requested by:
+Priority: P0 / P1 / P2 / P3
+Status: OPEN / IN PROGRESS / DONE / DEFERRED
 
----
+## Problem
 
-## 0. 메타 정보
+Describe the issue, evidence, and why it matters.
 
-```
-변경 요청 ID:    CR-YYYY-NNN
-요청자:          ____________________
-요청 날짜:       YYYY-MM-DD
-영향 받는 Phase: [Phase 1 / 2 / 3 / 4 / 5 / 6 / cross]
-영향 받는 문서:  [PROJECT_OVERVIEW.md / 진행계획서.md / docs/X.md]
-긴급도:          [Critical / High / Medium / Low]
-```
+## Requested Change
 
----
+Describe the smallest change that resolves the issue.
 
-## 1. 변경 요청 요약 (≤ 50 단어)
+## Acceptance Criteria
 
-> ___________________________________________________________________
+- [ ] Code or document updated.
+- [ ] Tests or notebook checks added when relevant.
+- [ ] README or project docs updated when navigation changes.
+- [ ] Audit log updated when audit status changes.
 
----
+## Validation
 
-## 2. 변경 사유
+Commands or manual checks required before closure.
 
-### 2.1 현재 상태
-___________________________________________________________________
+## Notes
 
-### 2.2 변경하려는 상태
-___________________________________________________________________
-
-### 2.3 사유
-- [ ] 새로운 정보 (논문 / 실험) 발견
-- [ ] 감사 결과 (CAUTION / MAJOR RISK) 에 따른 수정
-- [ ] 자원 / 일정 변경
-- [ ] 외부 환경 변화
-- [ ] 기타: __________________
-
----
-
-## 3. 영향 분석
-
-### 3.1 영향 받는 Phase / 모듈
-
-| Phase / 모듈 | 영향 | 작업량 |
-|--------------|------|--------|
-| | | |
-| | | |
-
-### 3.2 영향 받는 KPI
-
-| KPI | 변경 전 | 변경 후 |
-|-----|---------|---------|
-| K1 | | |
-| K2 | | |
-
-### 3.3 영향 받는 산출물 (deliverable)
-
-```
-[ ] src/ 코드 모듈
-[ ] tests/ 단위 테스트
-[ ] notebooks/ 노트북
-[ ] data/ 데이터
-[ ] docs/ 설계 문서
-[ ] PROJECT_OVERVIEW.md
-[ ] 진행계획서.md
-[ ] 논문/papers/ KNOWLEDGE.md / INDEX.md
-[ ] audits/ INSTRUCTIONS.md
-```
-
-### 3.4 위험 평가 (Risk Register §7과 연계)
-- 새로 등장하는 위험: _____________________________
-- 줄어드는 위험: ___________________________________
-
----
-
-## 4. 대안 검토
-
-| 대안 | 장점 | 단점 | 결정 |
-|------|------|------|------|
-| A: 변경 채택 | | | |
-| B: 변경 거부 (현 상태 유지) | | | |
-| C: 부분 변경 | | | |
-
----
-
-## 5. 권장 결정
-
-```
-[ ] 채택 (Approve)
-[ ] 거부 (Reject)
-[ ] 부분 채택 (Partial)
-[ ] 보류 (Defer)
-```
-
-권장 사유: ____________________________________________________
-
----
-
-## 6. 실행 계획 (채택 시)
-
-| 작업 | 담당 | 데드라인 | 의존성 |
-|------|------|----------|--------|
-| 1. 코드 수정 | | | |
-| 2. 단위 테스트 갱신 | | | |
-| 3. 문서 갱신 | | | |
-| 4. 재감사 | | | |
-| 5. PROJECT_OVERVIEW 업데이트 | | | |
-
----
-
-## 7. 의사결정 (Decision Log 갱신 항목)
-
-> 진행계획서 §10 Decision Log 에 추가할 항목.
-
-```
-### D{N+1}. <변경 제목>
-- 결정: __________________________________________________________
-- 근거: __________________________________________________________
-- 대안: __________________________________________________________
-- 영향: __________________________________________________________
-```
-
----
-
-## 8. 재감사 필요 여부
-
-```
-[ ] 데이터 감사 재실행
-[ ] 물리 감사 재실행
-[ ] AI/수치 감사 재실행
-[ ] 시뮬레이션 감사 재실행
-[ ] Phase Gate 재통과
-```
-
----
-
-## 9. 승인
-
-```
-요청자:        ____________________   날짜: ____________
-검토자:        ____________________   날짜: ____________
-승인자:        ____________________   날짜: ____________
-                                        결정: [Approve / Reject / Defer]
-```
-
----
-
-## 10. 변경 이력 추적
-
-본 변경 요청이 채택될 경우, 다음 위치에도 기록:
-
-```
-[ ] 진행계획서.md §13 변경 이력 항목 추가
-[ ] PROJECT_OVERVIEW.md §13 변경 이력 항목 추가
-[ ] AUDIT_LOG.md 에 CR-NNN 한 줄 요약 추가
-[ ] 영향 받는 docs/ 파일에 reference 추가
-```
+Additional context, tradeoffs, or links.
